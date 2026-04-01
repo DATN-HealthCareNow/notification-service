@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "core-service", url = "${CORE_SERVICE_URL:http://core-service:8080}")
+@FeignClient(name = "core-service", url = "${CORE_SERVICE_URL:http://core-service:8081}")
 public interface CoreServiceClient {
 
   @GetMapping("/api/v1/internal/users/{userId}/contact")

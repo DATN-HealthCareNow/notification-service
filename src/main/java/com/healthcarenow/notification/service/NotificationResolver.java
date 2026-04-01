@@ -7,6 +7,7 @@ import com.healthcarenow.notification.model.NotificationLog;
 import com.healthcarenow.notification.model.NotificationTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -17,7 +18,9 @@ import java.util.Map;
 public class NotificationResolver {
 
   private final CoreServiceClient coreServiceClient;
-  private final String INTERNAL_API_TOKEN = "hcn-internal-secret-2024";
+  
+  @Value("${app.internal-token:hcn-internal-secret-2024}")
+  private String internalApiToken;
 
   public UserContactResponse resolveContactInfo(NotificationEvent event) {
     String email = event.getPayload() != null ? event.getPayload().get("email") : null;
@@ -35,7 +38,7 @@ public class NotificationResolver {
     // If not, fetch from core-service
     log.info("Contact info missing from payload. Fetching from Core Service for user {}", event.getUserId());
     try {
-      return coreServiceClient.getContactInfo(INTERNAL_API_TOKEN, event.getUserId());
+      return coreServiceClient.getContactInfo(internalApiToken, event.getUserId());
     } catch (Exception e) {
       log.error("Failed to fetch contact info for user {}", event.getUserId(), e);
       throw new RuntimeException("Could not resolve contact info", e);

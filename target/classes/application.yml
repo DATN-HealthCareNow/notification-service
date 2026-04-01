@@ -1,6 +1,9 @@
 server:
   port: 8084
 
+app:
+  internal-token: ${APP_INTERNAL_TOKEN:hcn-internal-secret-2024}
+
 spring:
   jackson:
     property-naming-strategy: SNAKE_CASE

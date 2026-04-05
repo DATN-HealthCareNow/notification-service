@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,13 +25,7 @@ public class TemplateSeederConfig {
   public CommandLineRunner seedNotificationTemplates(NotificationTemplateRepository templateRepository) {
     return args -> {
       log.info("[TemplateSeeder] Starting notification template seeding...");
-      
-      long existingCount = templateRepository.count();
-      if (existingCount > 0) {
-        log.info("[TemplateSeeder] Templates already exist (count={}), skipping seed", existingCount);
-        return;
-      }
-      
+
       List<NotificationTemplate> templates = Arrays.asList(
         // WATER_REMINDER - multiple channels & languages
         NotificationTemplate.builder()
@@ -156,6 +151,99 @@ public class TemplateSeederConfig {
           .createdTimeUnix(Instant.now().getEpochSecond())
           .updatedTimeUnix(Instant.now().getEpochSecond())
           .build(),
+
+        // LOW_EXERCISE_REMINDER
+        NotificationTemplate.builder()
+          .code("LOW_EXERCISE_REMINDER")
+          .type("PUSH")
+          .language("vi")
+          .title("Hqua hơi lười nha, hôm nay bứt tốc thoi")
+          .body("Hôm qua bạn tập {exercise_minutes} phút thôi (< {target_minutes}p). Hôm nay mình bù nhẹ {missing_minutes} phút cho khỏe nha!")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Low exercise reminder (Vietnamese, playful)")
+          .supportedVariables("[\"exercise_minutes\", \"target_minutes\", \"missing_minutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        NotificationTemplate.builder()
+          .code("LOW_EXERCISE_REMINDER")
+          .type("PUSH")
+          .language("en")
+          .title("Yesterday was light, let's crush today")
+          .body("You only exercised {exercise_minutes} minutes yesterday (< {target_minutes}m). Let's add {missing_minutes} minutes today.")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Low exercise reminder (English)")
+          .supportedVariables("[\"exercise_minutes\", \"target_minutes\", \"missing_minutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+        
+        // ACTIVITY_REMINDER - 7AM playful reminder
+        NotificationTemplate.builder()
+          .code("ACTIVITY_REMINDER")
+          .type("PUSH")
+          .language("vi")
+          .title("Tập luyện hơi ít đó! 🏃")
+          .body("Hôm qua bạn chỉ tập {exerciseMinutes} phút. Hôm nay cố gắng tập thêm nhé! 💪")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Activity reminder at 7AM for low exercise (Vietnamese, playful)")
+          .supportedVariables("[\"exerciseMinutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+        
+        NotificationTemplate.builder()
+          .code("ACTIVITY_REMINDER")
+          .type("PUSH")
+          .language("en")
+          .title("Exercise reminder! 🏃")
+          .body("You only exercised {exerciseMinutes} minutes yesterday. Let's do better today! 💪")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Activity reminder at 7AM for low exercise (English)")
+          .supportedVariables("[\"exerciseMinutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        // NEW_ARTICLE_PUBLISHED
+        NotificationTemplate.builder()
+          .code("NEW_ARTICLE_PUBLISHED")
+          .type("PUSH")
+          .language("vi")
+          .title("📰 Bài viết mới: {article_title}")
+          .body("Chuyên mục {article_category} vừa có bài mới. Mở app để xem chi tiết.")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Notify users when a new health article is published (Vietnamese)")
+          .supportedVariables("[\"article_title\", \"article_category\", \"article_id\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        NotificationTemplate.builder()
+          .code("NEW_ARTICLE_PUBLISHED")
+          .type("PUSH")
+          .language("en")
+          .title("📰 New article: {article_title}")
+          .body("A new {article_category} article is now available. Open the app to read it.")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Notify users when a new health article is published (English)")
+          .supportedVariables("[\"article_title\", \"article_category\", \"article_id\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
         
         // APPOINTMENT_REMINDER
         NotificationTemplate.builder()
@@ -208,9 +296,24 @@ public class TemplateSeederConfig {
           .updatedTimeUnix(Instant.now().getEpochSecond())
           .build()
       );
-      
-      templateRepository.saveAll(templates);
-      log.info("[TemplateSeeder] ✅ Seeded {} notification templates", templates.size());
+
+      List<NotificationTemplate> missingTemplates = new ArrayList<>();
+      for (NotificationTemplate template : templates) {
+        boolean exists = templateRepository
+            .findByCodeAndTypeAndLanguage(template.getCode(), template.getType(), template.getLanguage())
+            .isPresent();
+        if (!exists) {
+          missingTemplates.add(template);
+        }
+      }
+
+      if (missingTemplates.isEmpty()) {
+        log.info("[TemplateSeeder] All default templates already exist. Nothing to seed.");
+        return;
+      }
+
+      templateRepository.saveAll(missingTemplates);
+      log.info("[TemplateSeeder] ✅ Seeded {} missing notification templates", missingTemplates.size());
     };
   }
 }

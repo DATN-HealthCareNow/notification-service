@@ -33,6 +33,20 @@ public class NotificationTemplate {
 
   private String body;
 
+  private String priority;
+
+  private Boolean enabled;
+
+  private Integer version;
+
+  private String description;
+
+  private String supportedVariables;
+
+  private Long createdTimeUnix;
+
+  private Long updatedTimeUnix;
+
   @CreatedDate
   private LocalDateTime createdAt;
 

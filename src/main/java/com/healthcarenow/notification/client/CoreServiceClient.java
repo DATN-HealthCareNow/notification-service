@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.util.Map;
+
 @FeignClient(name = "core-service", url = "${CORE_SERVICE_URL:http://core-service:8081}")
 public interface CoreServiceClient {
 
@@ -17,6 +19,11 @@ public interface CoreServiceClient {
 
   @DeleteMapping("/api/v1/internal/users/{userId}/device-token")
   void removeDeviceToken(
+      @RequestHeader("X-Internal-Token") String internalToken,
+      @PathVariable("userId") String userId);
+
+  @GetMapping("/api/v1/water-intake/internal/{userId}/progress")
+  Map<String, Object> getWaterProgress(
       @RequestHeader("X-Internal-Token") String internalToken,
       @PathVariable("userId") String userId);
 }

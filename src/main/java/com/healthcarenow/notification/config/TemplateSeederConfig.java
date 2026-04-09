@@ -294,6 +294,24 @@ public class TemplateSeederConfig {
           .supportedVariables("[\"name\", \"location\", \"time\"]")
           .createdTimeUnix(Instant.now().getEpochSecond())
           .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        NotificationTemplate.builder()
+          .code("PASSWORD_OTP")
+          .type("EMAIL")
+          .language("vi")
+          .title("Ma OTP {purpose} cua ban")
+          .body("<h2>Yeu cau {purpose}</h2>" +
+            "<p>Ma OTP cua ban la: <strong style='font-size: 22px'>{otp_code}</strong></p>" +
+            "<p>Ma co hieu luc trong <strong>{otp_expiry_minutes} phut</strong>.</p>" +
+            "<p>Neu ban khong thuc hien thao tac nay, vui long bo qua email.</p>")
+          .priority("HIGH")
+          .enabled(true)
+          .version(1)
+          .description("OTP email for change/forgot password flow (Vietnamese)")
+          .supportedVariables("[\"purpose\", \"otp_code\", \"otp_expiry_minutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
           .build()
       );
 

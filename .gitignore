@@ -1,3 +1,4 @@
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -31,6 +32,12 @@ build/
 ### VS Code ###
 .vscode/
 
+<<<<<<< HEAD
+### Secrets ###
+.env
+.env.local
+=======
 ### Custom/Environment ###
 .env
 .DS_Store
+>>>>>>> 2c064ba660b6adf8a3a6b5d165c51fa11fb0fa8c

@@ -23,26 +23,40 @@ public class NotificationLog {
 
   private String userId;
 
+  private String templateId;
+
+  private String eventId;
+
+  private String correlationId;
+
   private String recipient; // Email or Device Token
 
-  private String type; // EMAIL, PUSH
+  private String type; // EMAIL, PUSH, IN_APP
 
   private String title;
 
   private String content;
 
-  private String status; // PENDING, SENT, FAILED
+  private String status; // PENDING, SENT, FAILED, BOUNCED
 
-  private int retryCount;
+  private String priority;
+
+  private String language;
+
+  private Boolean isRead;
+
+  private Integer retryCount;
 
   private String providerResponse;
 
-  private boolean isRead;
-
-  private LocalDateTime readAt;
+  private String failureReason;
 
   @CreatedDate
   private LocalDateTime createdAt;
+
+  private LocalDateTime sentAt;
+
+  private LocalDateTime readAt;
 
   @LastModifiedDate
   private LocalDateTime updatedAt;

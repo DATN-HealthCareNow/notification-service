@@ -8,6 +8,7 @@ import com.healthcarenow.notification.provider.EmailProvider;
 import com.healthcarenow.notification.provider.PushProvider;
 import com.healthcarenow.notification.repository.NotificationLogRepository;
 import com.healthcarenow.notification.repository.NotificationTemplateRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class NotificationHandler {
   private final NotificationResolver resolver;
   private final EmailProvider emailProvider;
   private final PushProvider pushProvider;
+  private final RealtimeNotificationPublisher realtimeNotificationPublisher;
 
   public void processEvent(NotificationEvent event) {
     log.info("Processing notification event: {}", event.getEventType());
@@ -70,7 +72,12 @@ public class NotificationHandler {
     }
 
     notificationLog.setStatus(isSuccess ? "SENT" : "FAILED");
+    notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : notificationLog.getSentAt());
     logRepository.save(notificationLog);
+
+    if (isSuccess) {
+      realtimeNotificationPublisher.publish(notificationLog);
+    }
 
     if (!isSuccess) {
       // Throw exception to trigger DLX mechanism in RabbitMQ if it's failed

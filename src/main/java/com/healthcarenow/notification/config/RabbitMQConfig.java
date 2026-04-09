@@ -18,7 +18,7 @@ public class RabbitMQConfig {
   public static final String NOTIFICATION_DLQ = "notification.dlq";
 
   public static final String DEAD_LETTER_EXCHANGE = "healthcare.dlx";
-  public static final String ROUTING_KEY_NOTIFICATION = "#"; // all messages to notification exchange
+  public static final String ROUTING_KEY_NOTIFICATION = "notification.#"; // only notification.* events
 
   @Bean
   public TopicExchange healthcareExchange() {

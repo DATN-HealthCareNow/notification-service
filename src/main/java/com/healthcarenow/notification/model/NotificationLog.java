@@ -37,6 +37,10 @@ public class NotificationLog {
 
   private String providerResponse;
 
+  private boolean isRead;
+
+  private LocalDateTime readAt;
+
   @CreatedDate
   private LocalDateTime createdAt;
 

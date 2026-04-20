@@ -63,10 +63,12 @@ public class NotificationResolver {
 
     return NotificationLog.builder()
         .userId(event.getUserId())
+        .eventId(event.getEventType())
         .recipient(recipient)
         .type(template.getType())
         .title(title)
         .content(content)
+        .language(event.getPayload() != null ? event.getPayload().get("language") : null)
         .status("PENDING")
         .retryCount(0)
         .build();

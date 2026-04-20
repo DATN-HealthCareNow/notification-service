@@ -25,7 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ExerciseMinutesReminderScheduler {
 
-  private static final String EVENT_TYPE = "LOW_EXERCISE_REMINDER";
+  private static final String LOW_EVENT_TYPE = "LOW_EXERCISE_REMINDER";
+  private static final String NORMAL_EVENT_TYPE = "ACTIVITY_REMINDER";
 
   private final NotificationPreferenceRepository preferenceRepository;
   private final NotificationHandler notificationHandler;
@@ -70,11 +71,6 @@ public class ExerciseMinutesReminderScheduler {
         continue;
       }
 
-      Map<String, Boolean> enabledEventTypes = preference.getEnabledEventTypes();
-      if (enabledEventTypes != null && Boolean.FALSE.equals(enabledEventTypes.get(EVENT_TYPE))) {
-        continue;
-      }
-
       ZoneId userZone = resolveZoneId(preference.getTimezone());
       ZonedDateTime now = ZonedDateTime.now(userZone);
 
@@ -84,11 +80,6 @@ public class ExerciseMinutesReminderScheduler {
 
       LocalDate targetDate = now.toLocalDate().minusDays(1);
       String targetDateString = targetDate.toString();
-
-      String dispatchKey = preference.getUserId() + ":" + targetDateString + ":" + EVENT_TYPE;
-      if (!dispatchedKeys.add(dispatchKey)) {
-        continue;
-      }
 
       ExerciseMetricsResponse metrics;
       try {
@@ -100,7 +91,15 @@ public class ExerciseMinutesReminderScheduler {
       }
 
       int exerciseMinutes = metrics != null && metrics.getExerciseMinutes() != null ? metrics.getExerciseMinutes() : 0;
-      if (exerciseMinutes >= thresholdMinutes) {
+      String eventType = exerciseMinutes < thresholdMinutes ? LOW_EVENT_TYPE : NORMAL_EVENT_TYPE;
+
+      Map<String, Boolean> enabledEventTypes = preference.getEnabledEventTypes();
+      if (enabledEventTypes != null && Boolean.FALSE.equals(enabledEventTypes.get(eventType))) {
+        continue;
+      }
+
+      String dispatchKey = preference.getUserId() + ":" + targetDateString + ":" + eventType;
+      if (!dispatchedKeys.add(dispatchKey)) {
         continue;
       }
 
@@ -114,9 +113,14 @@ public class ExerciseMinutesReminderScheduler {
       payload.put("missing_minutes", String.valueOf(missingMinutes));
       payload.put("date", targetDateString);
       payload.put("reminder_source", "exercise-minutes-reminder-scheduler");
+      payload.put("exerciseMinutes", String.valueOf(exerciseMinutes));
+
+      if (exerciseMinutes >= thresholdMinutes) {
+        payload.put("target_minutes", String.valueOf(thresholdMinutes));
+      }
 
       NotificationEvent event = NotificationEvent.builder()
-          .eventType(EVENT_TYPE)
+          .eventType(eventType)
           .userId(preference.getUserId())
           .priority("NORMAL")
           .payload(payload)

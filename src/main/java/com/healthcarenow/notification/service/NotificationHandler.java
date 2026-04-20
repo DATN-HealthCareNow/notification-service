@@ -42,7 +42,27 @@ public class NotificationHandler {
         .findByCodeAndTypeAndLanguage(event.getEventType(), "EMAIL", language);
 
     if (pushTemplateOpt.isEmpty() && emailTemplateOpt.isEmpty()) {
-      log.warn("No templates found for event {} and language {}", event.getEventType(), language);
+      log.warn("No templates found for event {} and language {}. Checking for fallback in payload...", event.getEventType(), language);
+      
+      // Fallback: If payload has title and body, we can still send a PUSH
+      if (event.getPayload() != null && event.getPayload().containsKey("title") && event.getPayload().containsKey("body")) {
+        log.info("Using fallback title/body from payload for event {}", event.getEventType());
+        UserContactResponse contactInfo = resolver.resolveContactInfo(event);
+        if (contactInfo.getDeviceToken() != null && !contactInfo.getDeviceToken().isEmpty()) {
+           NotificationLog fallbackLog = NotificationLog.builder()
+               .userId(event.getUserId())
+               .eventId(event.getEventType())
+               .recipient(contactInfo.getDeviceToken())
+               .title(event.getPayload().get("title"))
+               .content(event.getPayload().get("body"))
+               .type("PUSH")
+               .language(language)
+               .status("PENDING")
+               .createdAt(LocalDateTime.now())
+               .build();
+           sendRawNotification(fallbackLog);
+        }
+      }
       return;
     }
 
@@ -82,6 +102,18 @@ public class NotificationHandler {
     if (!isSuccess) {
       // Throw exception to trigger DLX mechanism in RabbitMQ if it's failed
       throw new RuntimeException("Notification failed to send, triggering retry mechanism via DLX.");
+    }
+  }
+  private void sendRawNotification(NotificationLog notificationLog) {
+    notificationLog = logRepository.save(notificationLog);
+    boolean isSuccess = pushProvider.sendPushNotification(notificationLog);
+    
+    notificationLog.setStatus(isSuccess ? "SENT" : "FAILED");
+    notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : null);
+    logRepository.save(notificationLog);
+
+    if (isSuccess) {
+      realtimeNotificationPublisher.publish(notificationLog);
     }
   }
 }

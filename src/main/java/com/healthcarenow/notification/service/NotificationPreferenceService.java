@@ -89,6 +89,7 @@ public class NotificationPreferenceService {
     defaultEnabledEventTypes.put("HIGH_HEART_RATE", true);
     defaultEnabledEventTypes.put("LOW_SLEEP_ALERT", true);
     defaultEnabledEventTypes.put("LOW_EXERCISE_REMINDER", true);
+    defaultEnabledEventTypes.put("ACTIVITY_REMINDER", true);
     defaultEnabledEventTypes.put("APPOINTMENT_REMINDER", true);
     defaultEnabledEventTypes.put("MEDICATION_TIME", true);
     

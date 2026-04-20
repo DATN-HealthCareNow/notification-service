@@ -23,8 +23,8 @@ public class PushProvider {
   @Value("${expo.push.apiUrl:https://exp.host/--/api/v2/push/send}")
   private String expoApiUrl;
 
-  // Internal API Token used for CoreService authentication
-  private final String INTERNAL_API_TOKEN = "hcn-internal-secret-2024";
+  @Value("${app.internal-token:hcn-internal-secret-2024}")
+  private String internalApiToken;
 
   private final RestTemplate restTemplate;
   private final CoreServiceClient coreServiceClient;
@@ -47,6 +47,7 @@ public class PushProvider {
       body.put("to", token);
       body.put("title", notificationLog.getTitle());
       body.put("body", notificationLog.getContent());
+      body.put("data", buildPushData(notificationLog));
 
       HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
       ResponseEntity<String> response = restTemplate.postForEntity(expoApiUrl, request, String.class);
@@ -63,7 +64,7 @@ public class PushProvider {
           // Call Core Service to delete invalid token using FeignClient
           if (notificationLog.getUserId() != null) {
             try {
-              coreServiceClient.removeDeviceToken(INTERNAL_API_TOKEN, notificationLog.getUserId());
+              coreServiceClient.removeDeviceToken(internalApiToken, notificationLog.getUserId());
               log.info("Successfully deleted invalid token for user {}", notificationLog.getUserId());
             } catch (Exception e) {
               log.error("Failed to delete invalid token from core service: {}", e.getMessage());
@@ -84,5 +85,27 @@ public class PushProvider {
       notificationLog.setProviderResponse(e.getMessage());
       return false;
     }
+  }
+
+  private Map<String, Object> buildPushData(NotificationLog notificationLog) {
+    Map<String, Object> data = new HashMap<>();
+    String eventType = notificationLog.getEventId() != null ? notificationLog.getEventId() : "UNKNOWN";
+
+    data.put("eventType", eventType);
+    data.put("notificationId", notificationLog.getId());
+    data.put("userId", notificationLog.getUserId());
+
+    if ("WATER_REMINDER".equals(eventType)) {
+      data.put("screen", "hydration");
+      data.put("action", "open_water_screen");
+    } else if ("LOW_EXERCISE_REMINDER".equals(eventType) || "ACTIVITY_REMINDER".equals(eventType)) {
+      data.put("screen", "activity");
+      data.put("action", "open_activity_screen");
+    } else if ("MEDICATION_TIME".equals(eventType)) {
+      data.put("screen", "notifications");
+      data.put("action", "open_medication_reminder");
+    }
+
+    return data;
   }
 }

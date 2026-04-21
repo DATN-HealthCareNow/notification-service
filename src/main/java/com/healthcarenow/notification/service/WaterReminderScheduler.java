@@ -120,6 +120,9 @@ public class WaterReminderScheduler {
       payload.put("current", String.valueOf(currentMl));
       payload.put("goal", String.valueOf(goalMl));
       payload.put("needed", String.valueOf(neededMl));
+      payload.put("title", "Đã đến giờ uống nước!");
+      payload.put("body", String.format("Bạn cần uống thêm %d ml nước nữa để đạt mục tiêu ngày hôm nay (%d/%d ml).", 
+          neededMl, currentMl, goalMl));
       payload.put("reminder_source", "water-reminder-scheduler");
       payload.put("reminder_interval_windows", reminderWindows);
       payload.put("scheduled_window", dispatchPlan.windowKey());

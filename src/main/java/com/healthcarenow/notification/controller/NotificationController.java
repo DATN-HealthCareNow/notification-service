@@ -4,6 +4,8 @@ import com.healthcarenow.notification.dto.NotificationLogDTO;
 import com.healthcarenow.notification.dto.NotificationPreferenceDTO;
 import com.healthcarenow.notification.service.NotificationLogService;
 import com.healthcarenow.notification.service.NotificationPreferenceService;
+import com.healthcarenow.notification.service.NotificationHandler;
+import com.healthcarenow.notification.dto.NotificationEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class NotificationController {
 
   private final NotificationLogService notificationLogService;
   private final NotificationPreferenceService notificationPreferenceService;
+  private final NotificationHandler notificationHandler;
 
   /**
    * GET /api/v1/notifications
@@ -147,6 +150,33 @@ public class NotificationController {
     NotificationPreferenceDTO updated = notificationPreferenceService.updatePreferences(userId, request);
 
     return ResponseEntity.ok(updated);
+  }
+
+  /**
+   * POST /api/v1/notifications/test-exercise
+   * Trigger a test LOW_EXERCISE_REMINDER for the user
+   */
+  @PostMapping("/test-exercise")
+  public ResponseEntity<Void> triggerTestExerciseReminder(
+      @RequestHeader("x-user-id") String userId) {
+    
+    log.info("[NotificationController] Triggered test exercise reminder for userId={}", userId);
+    
+    java.util.Map<String, String> payload = new java.util.HashMap<>();
+    payload.put("title", "Cảnh báo lười vận động!");
+    payload.put("body", "Bạn đã vận động dưới 30 phút trong ngày hôm nay. Hãy đứng dậy và vận động nhẹ nhàng để bảo vệ sức khỏe nhé!");
+    payload.put("language", "vi");
+
+    NotificationEvent event = NotificationEvent.builder()
+        .eventType("LOW_EXERCISE_REMINDER")
+        .userId(userId)
+        .priority("NORMAL")
+        .payload(payload)
+        .build();
+
+    notificationHandler.processEvent(event);
+    
+    return ResponseEntity.ok().build();
   }
 
   // DTO Response classes

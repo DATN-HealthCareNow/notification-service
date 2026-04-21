@@ -22,10 +22,10 @@ public class NotificationLogService {
   private final NotificationLogRepository notificationLogRepository;
   
   /**
-   * Get all notifications for a user (paginated)
+   * Get all notifications for a user (paginated), excluding WATER_REMINDER
    */
   public Page<NotificationLogDTO> getUserNotifications(String userId, Pageable pageable) {
-    Page<NotificationLog> page = notificationLogRepository.findByUserId(userId, pageable);
+    Page<NotificationLog> page = notificationLogRepository.findByUserIdAndEventIdNot(userId, "WATER_REMINDER", pageable);
     List<NotificationLogDTO> dtos = page.getContent().stream()
         .map(this::toDTO)
         .collect(Collectors.toList());
@@ -33,10 +33,10 @@ public class NotificationLogService {
   }
   
   /**
-   * Get only unread notifications for a user
+   * Get only unread notifications for a user, excluding WATER_REMINDER
    */
   public Page<NotificationLogDTO> getUnreadNotifications(String userId, Pageable pageable) {
-    Page<NotificationLog> page = notificationLogRepository.findByUserIdAndIsReadFalse(userId, pageable);
+    Page<NotificationLog> page = notificationLogRepository.findByUserIdAndEventIdNotAndIsRead(userId, "WATER_REMINDER", false, pageable);
     List<NotificationLogDTO> dtos = page.getContent().stream()
         .map(this::toDTO)
         .collect(Collectors.toList());
@@ -44,10 +44,10 @@ public class NotificationLogService {
   }
   
   /**
-   * Get count of unread notifications
+   * Get count of unread notifications, excluding WATER_REMINDER
    */
   public Long getUnreadCount(String userId) {
-    return notificationLogRepository.countByUserIdAndIsReadFalse(userId);
+    return notificationLogRepository.countByUserIdAndEventIdNotAndIsRead(userId, "WATER_REMINDER", false);
   }
   
   /**
@@ -71,13 +71,10 @@ public class NotificationLogService {
     return toDTO(saved);
   }
   
-  /**
-   * Mark all notifications as read for a user
-   */
   public Long markAllAsRead(String userId) {
-    Page<NotificationLog> unreadPage = notificationLogRepository.findByUserIdAndIsReadFalse(userId, 
+    Page<NotificationLog> unreadPage = notificationLogRepository.findByUserIdAndEventIdNotAndIsRead(userId, 
+        "WATER_REMINDER", false,
         org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE));
-    
     List<NotificationLog> unreadNotifications = unreadPage.getContent();
     LocalDateTime now = LocalDateTime.now();
     

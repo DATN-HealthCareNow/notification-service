@@ -48,28 +48,33 @@ public class NotificationHandler {
       if (event.getPayload() != null && event.getPayload().containsKey("title") && event.getPayload().containsKey("body")) {
         log.info("Using fallback title/body from payload for event {}", event.getEventType());
         UserContactResponse contactInfo = resolver.resolveContactInfo(event);
-        if (contactInfo.getDeviceToken() != null && !contactInfo.getDeviceToken().isEmpty()) {
-           NotificationLog fallbackLog = NotificationLog.builder()
-               .userId(event.getUserId())
-               .eventId(event.getEventType())
-               .recipient(contactInfo.getDeviceToken())
-               .title(event.getPayload().get("title"))
-               .content(event.getPayload().get("body"))
-               .type("PUSH")
-               .language(language)
-               .status("PENDING")
-               .createdAt(LocalDateTime.now())
-               .build();
-           sendRawNotification(fallbackLog);
-        }
+        
+        String recipient = (contactInfo.getDeviceToken() != null && !contactInfo.getDeviceToken().isEmpty()) 
+                          ? contactInfo.getDeviceToken() 
+                          : "UNKNOWN_DEVICE";
+
+        NotificationLog fallbackLog = NotificationLog.builder()
+            .userId(event.getUserId())
+            .eventId(event.getEventType())
+            .recipient(recipient)
+            .title(event.getPayload().get("title"))
+            .content(event.getPayload().get("body"))
+            .type("PUSH")
+            .language(language)
+            .status("PENDING")
+            .createdAt(LocalDateTime.now())
+            .build();
+        sendRawNotification(fallbackLog);
       }
       return;
     }
 
     UserContactResponse contactInfo = resolver.resolveContactInfo(event);
 
-    if (pushTemplateOpt.isPresent()
-        && (contactInfo.getDeviceToken() != null && !contactInfo.getDeviceToken().isEmpty())) {
+    if (pushTemplateOpt.isPresent()) {
+      if (contactInfo.getDeviceToken() == null || contactInfo.getDeviceToken().isEmpty()) {
+        contactInfo.setDeviceToken("UNKNOWN_DEVICE");
+      }
       dispatchNotification(event, pushTemplateOpt.get(), contactInfo);
     }
 
@@ -95,25 +100,36 @@ public class NotificationHandler {
     notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : notificationLog.getSentAt());
     logRepository.save(notificationLog);
 
-    if (isSuccess) {
-      realtimeNotificationPublisher.publish(notificationLog);
-    }
+    // Always publish to websocket so in-app notifications still work even if PUSH to OS fails
+    realtimeNotificationPublisher.publish(notificationLog);
 
     if (!isSuccess) {
-      // Throw exception to trigger DLX mechanism in RabbitMQ if it's failed
-      throw new RuntimeException("Notification failed to send, triggering retry mechanism via DLX.");
+      if (notificationLog.getProviderResponse() != null && 
+          (notificationLog.getProviderResponse().contains("Invalid Token Format") || 
+           notificationLog.getProviderResponse().contains("DeviceNotRegistered"))) {
+         log.warn("Unrecoverable notification error (e.g. invalid token). Skipping DLX retry.");
+      } else {
+        throw new RuntimeException("Notification failed to send, triggering retry mechanism via DLX.");
+      }
     }
   }
+
   private void sendRawNotification(NotificationLog notificationLog) {
     notificationLog = logRepository.save(notificationLog);
-    boolean isSuccess = pushProvider.sendPushNotification(notificationLog);
+    boolean isSuccess = false;
+    
+    if (notificationLog.getRecipient() != null && notificationLog.getRecipient().startsWith("ExponentPushToken[")) {
+      isSuccess = pushProvider.sendPushNotification(notificationLog);
+    } else {
+      log.info("No valid push token for {}, skipping Expo send but saved for in-app", notificationLog.getUserId());
+      notificationLog.setProviderResponse("In-app only, no valid push token");
+      isSuccess = true; // Treat as success to avoid throwing DLX errors
+    }
     
     notificationLog.setStatus(isSuccess ? "SENT" : "FAILED");
     notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : null);
     logRepository.save(notificationLog);
 
-    if (isSuccess) {
-      realtimeNotificationPublisher.publish(notificationLog);
-    }
+    realtimeNotificationPublisher.publish(notificationLog);
   }
 }

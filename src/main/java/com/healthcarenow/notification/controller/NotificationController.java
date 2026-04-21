@@ -166,6 +166,9 @@ public class NotificationController {
     payload.put("title", "Cảnh báo lười vận động!");
     payload.put("body", "Bạn đã vận động dưới 30 phút trong ngày hôm nay. Hãy đứng dậy và vận động nhẹ nhàng để bảo vệ sức khỏe nhé!");
     payload.put("language", "vi");
+    // Add placeholders used by the actual database template to avoid unreplaced {tags}
+    payload.put("execise_minutes", "15");
+    payload.put("target_minues", "30");
 
     NotificationEvent event = NotificationEvent.builder()
         .eventType("LOW_EXERCISE_REMINDER")

@@ -12,10 +12,10 @@ import org.springframework.data.domain.Pageable;
 @Repository
 public interface NotificationLogRepository extends MongoRepository<NotificationLog, String> {
 
-	Page<NotificationLog> findByUserId(String userId, Pageable pageable);
+	Page<NotificationLog> findByUserIdAndEventIdNot(String userId, String eventId, Pageable pageable);
 
-	Page<NotificationLog> findByUserIdAndIsReadFalse(String userId, Pageable pageable);
+	Page<NotificationLog> findByUserIdAndEventIdNotAndIsRead(String userId, String eventId, Boolean isRead, Pageable pageable);
 
-	long countByUserIdAndIsReadFalse(String userId);
+	long countByUserIdAndEventIdNotAndIsRead(String userId, String eventId, Boolean isRead);
 
 }

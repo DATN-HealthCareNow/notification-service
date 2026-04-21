@@ -101,7 +101,7 @@ jobs:
             sudo docker pull 632469639580.dkr.ecr.ap-southeast-1.amazonaws.com/healthcare-notification-service:latest
             
             echo "3. Cập nhật và khởi động lại notification-service..."
-            cd ~/devops_service
+            cd ~/devops-service || cd ~/HealthCareNow/devops-service || exit 1
             sudo docker compose up -d notification-service
             
             echo "4. Dọn dẹp các Image cũ để tránh đầy ổ cứng server..."

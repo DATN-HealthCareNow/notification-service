@@ -20,5 +20,5 @@ public class NotificationEvent {
   private String priority; // HIGH, NORMAL
 
   // Payload can contain: location, name, email, deviceToken, language, etc.
-  private Map<String, String> payload;
+  private Map<String, Object> payload;
 }

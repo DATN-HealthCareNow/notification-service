@@ -31,7 +31,7 @@ public class NotificationHandler {
     log.info("Processing notification event: {}", event.getEventType());
 
     String language = event.getPayload() != null && event.getPayload().containsKey("language")
-        ? event.getPayload().get("language")
+        ? String.valueOf(event.getPayload().get("language"))
         : "vi"; // default
 
     // Load templates (both EMAIL and PUSH if applicable for the event)
@@ -57,14 +57,55 @@ public class NotificationHandler {
             .userId(event.getUserId())
             .eventId(event.getEventType())
             .recipient(recipient)
-            .title(event.getPayload().get("title"))
-            .content(event.getPayload().get("body"))
+            .title(String.valueOf(event.getPayload().get("title")))
+            .content(String.valueOf(event.getPayload().get("body")))
             .type("PUSH")
             .language(language)
             .status("PENDING")
             .createdAt(LocalDateTime.now())
             .build();
         sendRawNotification(fallbackLog);
+      }
+      
+      // Fallback: HTML Email for OTPs if template is missing
+      if (event.getEventType().contains("OTP") && event.getPayload() != null && event.getPayload().containsKey("otp_code")) {
+        UserContactResponse contactInfo = resolver.resolveContactInfo(event);
+        if (contactInfo.getEmail() != null && !contactInfo.getEmail().isEmpty()) {
+            String purpose = event.getPayload().containsKey("purpose") ? String.valueOf(event.getPayload().get("purpose")) : "xác thực tài khoản";
+            String otpCode = String.valueOf(event.getPayload().get("otp_code"));
+            String minutes = event.getPayload().containsKey("otp_expiry_minutes") ? String.valueOf(event.getPayload().get("otp_expiry_minutes")) : "5";
+            
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;\">" +
+                "<div style=\"text-align: center; margin-bottom: 20px;\">" +
+                "<h2 style=\"color: #10b981; margin: 0;\">HealthCare Now</h2>" +
+                "</div>" +
+                "<p style=\"font-size: 16px; color: #333;\">Xin chào,</p>" +
+                "<p style=\"font-size: 16px; color: #333;\">Bạn đã yêu cầu một mã OTP để <strong>" + purpose + "</strong>. Vui lòng sử dụng mã bảo mật dưới đây:</p>" +
+                "<div style=\"text-align: center; margin: 30px 0;\">" +
+                "<span style=\"font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #10b981; background-color: #f0fdf4; padding: 15px 30px; border-radius: 8px; border: 1px dashed #34d399;\">" + otpCode + "</span>" +
+                "</div>" +
+                "<p style=\"font-size: 14px; color: #666;\">Mã OTP này sẽ hết hạn sau " + minutes + " phút. Tuyệt đối <strong>KHÔNG</strong> chia sẻ mã này cho bất kỳ ai để đảm bảo an toàn tài khoản.</p>" +
+                "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />" +
+                "<p style=\"font-size: 12px; color: #999; text-align: center;\">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.<br/>Đội ngũ HealthCare Now</p>" +
+                "</div>";
+
+            NotificationLog emailLog = NotificationLog.builder()
+                .userId(event.getUserId())
+                .eventId(event.getEventType())
+                .recipient(contactInfo.getEmail())
+                .title("Mã Xác Thực (OTP) HealthCare Now")
+                .content(htmlContent)
+                .type("EMAIL")
+                .language(language)
+                .status("PENDING")
+                .createdAt(LocalDateTime.now())
+                .build();
+            
+            boolean isSuccess = emailProvider.sendEmail(emailLog);
+            emailLog.setStatus(isSuccess ? "SENT" : "FAILED");
+            emailLog.setSentAt(isSuccess ? LocalDateTime.now() : null);
+            logRepository.save(emailLog);
+        }
       }
       return;
     }

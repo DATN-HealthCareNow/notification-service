@@ -101,9 +101,12 @@ public class PushProvider {
     } else if ("LOW_EXERCISE_REMINDER".equals(eventType) || "ACTIVITY_REMINDER".equals(eventType)) {
       data.put("screen", "activity");
       data.put("action", "open_activity_screen");
-    } else if ("MEDICATION_TIME".equals(eventType)) {
+    } else if ("MEDICATION_TIME".equals(eventType) || "MEDICATION_REMINDER".equals(eventType)) {
       data.put("screen", "notifications");
       data.put("action", "open_medication_reminder");
+    } else if ("NEW_ARTICLE_PUBLISHED".equals(eventType)) {
+      data.put("screen", "articles");
+      data.put("action", "open_article_screen");
     }
 
     return data;

@@ -162,13 +162,14 @@ public class NotificationController {
     
     log.info("[NotificationController] Triggered test exercise reminder for userId={}", userId);
     
-    java.util.Map<String, String> payload = new java.util.HashMap<>();
+    java.util.Map<String, Object> payload = new java.util.HashMap<>();
     payload.put("title", "Cảnh báo lười vận động!");
     payload.put("body", "Bạn đã vận động dưới 30 phút trong ngày hôm nay. Hãy đứng dậy và vận động nhẹ nhàng để bảo vệ sức khỏe nhé!");
     payload.put("language", "vi");
-    // Add placeholders used by the actual database template to avoid unreplaced {tags}
-    payload.put("execise_minutes", "15");
-    payload.put("target_minues", "30");
+    // Add placeholders used by the actual database template
+    payload.put("exercise_minutes", "15");
+    payload.put("target_minutes", "30");
+    payload.put("missing_minutes", "15");
 
     NotificationEvent event = NotificationEvent.builder()
         .eventType("LOW_EXERCISE_REMINDER")

@@ -312,6 +312,42 @@ public class TemplateSeederConfig {
           .supportedVariables("[\"purpose\", \"otp_code\", \"otp_expiry_minutes\"]")
           .createdTimeUnix(Instant.now().getEpochSecond())
           .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+          
+        NotificationTemplate.builder()
+          .code("REGISTER_OTP")
+          .type("EMAIL")
+          .language("vi")
+          .title("Ma OTP xac nhan dang ky tai khoan cua ban")
+          .body("<h2>Xac nhan dang ky tai khoan</h2>" +
+            "<p>Ma OTP cua ban la: <strong style='font-size: 22px'>{otp_code}</strong></p>" +
+            "<p>Ma co hieu luc trong <strong>{otp_expiry_minutes} phut</strong>.</p>" +
+            "<p>Neu ban khong dang ky, vui long bo qua email nay.</p>")
+          .priority("HIGH")
+          .enabled(true)
+          .version(1)
+          .description("OTP email for account registration (Vietnamese)")
+          .supportedVariables("[\"otp_code\", \"otp_expiry_minutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        NotificationTemplate.builder()
+          .code("REGISTER_OTP")
+          .type("EMAIL")
+          .language("en")
+          .title("Your account registration OTP")
+          .body("<h2>Confirm your registration</h2>" +
+            "<p>Your OTP code is: <strong style='font-size: 22px'>{otp_code}</strong></p>" +
+            "<p>This code expires in <strong>{otp_expiry_minutes} minutes</strong>.</p>" +
+            "<p>If you didn't request this, please ignore this email.</p>")
+          .priority("HIGH")
+          .enabled(true)
+          .version(1)
+          .description("OTP email for account registration (English)")
+          .supportedVariables("[\"otp_code\", \"otp_expiry_minutes\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
           .build()
       );
 

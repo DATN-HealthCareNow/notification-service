@@ -301,19 +301,32 @@ public class TemplateSeederConfig {
           .type("EMAIL")
           .language("vi")
           .title("Ma OTP {purpose} cua ban")
-          .body("<div style=\"font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; text-align: center;\">" +
-            "<div style=\"margin-bottom: 30px;\">" +
-            "  <div style=\"display: inline-block; width: 50px; height: 50px; background-color: #000; border-radius: 50%; vertical-align: middle; margin-right: 10px;\">" +
-            "    <div style=\"color: #00f2fe; font-size: 30px; line-height: 50px; font-weight: bold;\">H</div>" +
-            "  </div>" +
-            "  <span style=\"font-size: 20px; font-weight: 700; color: #4facfe;\">HealthCare Now</span>" +
-            "</div>" +
-            "<h1 style=\"font-size: 24px; color: #1a1a1a;\">Hello there,</h1>" +
-            "<p style=\"color: #666;\">Your verification code for {purpose} is:</p>" +
-            "<div style=\"background-color: #f8fbff; border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #eef5ff;\">" +
-            "  <div style=\"font-size: 40px; font-weight: 800; color: #4facfe; letter-spacing: 10px;\">{otp_code}</div>" +
-            "</div>" +
-            "<p style=\"font-size: 13px; color: #999;\">🕒 This code will expire in {otp_expiry_minutes} minutes.</p>" +
+          .body("<div style=\"margin:0;padding:0;background:#f3f6fb;\">" +
+            "  <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"background:#f3f6fb;padding:24px 12px;\">" +
+            "    <tr><td align=\"center\">" +
+            "      <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #e5eaf2;overflow:hidden;\">" +
+            "        <tr><td style=\"padding:18px 20px;background:#f8fbff;border-bottom:1px solid #eef3fb;\">" +
+            "          <span style=\"display:inline-block;width:26px;height:26px;line-height:26px;border-radius:13px;background:#111827;color:#38bdf8;text-align:center;font-size:14px;font-weight:700;font-family:Arial,sans-serif;margin-right:8px;\">H</span>" +
+            "          <span style=\"font-family:Arial,sans-serif;font-size:21px;font-weight:700;color:#3b82f6;vertical-align:middle;\">HealthCareNow</span>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:28px 24px 8px 24px;font-family:Arial,sans-serif;\">" +
+            "          <div style=\"font-size:34px;line-height:1.2;color:#1f2937;font-weight:700;margin-bottom:10px;\">Hello there,</div>" +
+            "          <div style=\"font-size:15px;line-height:1.6;color:#6b7280;margin-bottom:18px;\">Your verification code for HealthCareNow (<strong>{purpose}</strong>) is:</div>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:0 24px;\">" +
+            "          <div style=\"border:1px solid #e8edf5;border-radius:10px;background:#ffffff;text-align:center;padding:24px 12px;\">" +
+            "            <div style=\"font-family:'Courier New',monospace;font-size:52px;line-height:1.1;letter-spacing:8px;color:#3b82f6;font-weight:700;\">{otp_code}</div>" +
+            "          </div>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:14px 24px 8px 24px;font-family:Arial,sans-serif;\">" +
+            "          <div style=\"font-size:13px;color:#6b7280;\">&#9432; This code will expire in {otp_expiry_minutes} minutes.</div>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:8px 24px 18px 24px;font-family:Arial,sans-serif;\">" +
+            "          <div style=\"font-size:12px;line-height:1.6;color:#94a3b8;\">If you didn&apos;t request this code, please ignore this email or contact our <a href=\"#\" style=\"color:#3b82f6;text-decoration:none;font-weight:600;\">support team</a>.</div>" +
+            "        </td></tr>" +
+            "      </table>" +
+            "    </td></tr>" +
+            "  </table>" +
             "</div>")
           .priority("HIGH")
           .enabled(true)
@@ -329,19 +342,32 @@ public class TemplateSeederConfig {
           .type("EMAIL")
           .language("vi")
           .title("Ma OTP xac nhan dang ky tai khoan")
-          .body("<div style=\"font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; text-align: center;\">" +
-            "<div style=\"margin-bottom: 30px;\">" +
-            "  <div style=\"display: inline-block; width: 50px; height: 50px; background-color: #000; border-radius: 50%; vertical-align: middle; margin-right: 10px;\">" +
-            "    <div style=\"color: #00f2fe; font-size: 30px; line-height: 50px; font-weight: bold;\">H</div>" +
-            "  </div>" +
-            "  <span style=\"font-size: 20px; font-weight: 700; color: #4facfe;\">HealthCare Now</span>" +
-            "</div>" +
-            "<h1 style=\"font-size: 24px; color: #1a1a1a;\">Hello there,</h1>" +
-            "<p style=\"color: #666;\">Your account registration OTP is:</p>" +
-            "<div style=\"background-color: #f8fbff; border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #eef5ff;\">" +
-            "  <div style=\"font-size: 40px; font-weight: 800; color: #4facfe; letter-spacing: 10px;\">{otp_code}</div>" +
-            "</div>" +
-            "<p style=\"font-size: 13px; color: #999;\">🕒 This code will expire in {otp_expiry_minutes} minutes.</p>" +
+          .body("<div style=\"margin:0;padding:0;background:#f3f6fb;\">" +
+            "  <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"background:#f3f6fb;padding:24px 12px;\">" +
+            "    <tr><td align=\"center\">" +
+            "      <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #e5eaf2;overflow:hidden;\">" +
+            "        <tr><td style=\"padding:18px 20px;background:#f8fbff;border-bottom:1px solid #eef3fb;\">" +
+            "          <span style=\"display:inline-block;width:26px;height:26px;line-height:26px;border-radius:13px;background:#111827;color:#38bdf8;text-align:center;font-size:14px;font-weight:700;font-family:Arial,sans-serif;margin-right:8px;\">H</span>" +
+            "          <span style=\"font-family:Arial,sans-serif;font-size:21px;font-weight:700;color:#3b82f6;vertical-align:middle;\">HealthCareNow</span>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:28px 24px 8px 24px;font-family:Arial,sans-serif;\">" +
+            "          <div style=\"font-size:34px;line-height:1.2;color:#1f2937;font-weight:700;margin-bottom:10px;\">Hello there,</div>" +
+            "          <div style=\"font-size:15px;line-height:1.6;color:#6b7280;margin-bottom:18px;\">Your verification code for account registration is:</div>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:0 24px;\">" +
+            "          <div style=\"border:1px solid #e8edf5;border-radius:10px;background:#ffffff;text-align:center;padding:24px 12px;\">" +
+            "            <div style=\"font-family:'Courier New',monospace;font-size:52px;line-height:1.1;letter-spacing:8px;color:#3b82f6;font-weight:700;\">{otp_code}</div>" +
+            "          </div>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:14px 24px 8px 24px;font-family:Arial,sans-serif;\">" +
+            "          <div style=\"font-size:13px;color:#6b7280;\">&#9432; This code will expire in {otp_expiry_minutes} minutes.</div>" +
+            "        </td></tr>" +
+            "        <tr><td style=\"padding:8px 24px 18px 24px;font-family:Arial,sans-serif;\">" +
+            "          <div style=\"font-size:12px;line-height:1.6;color:#94a3b8;\">If you didn&apos;t request this code, please ignore this email or contact our <a href=\"#\" style=\"color:#3b82f6;text-decoration:none;font-weight:600;\">support team</a>.</div>" +
+            "        </td></tr>" +
+            "      </table>" +
+            "    </td></tr>" +
+            "  </table>" +
             "</div>")
           .priority("HIGH")
           .enabled(true)

@@ -27,6 +27,64 @@ public class NotificationHandler {
   private final PushProvider pushProvider;
   private final RealtimeNotificationPublisher realtimeNotificationPublisher;
 
+  private String getPayloadValue(NotificationEvent event, String key, String fallback) {
+    if (event.getPayload() != null && event.getPayload().containsKey(key) && event.getPayload().get(key) != null) {
+      return String.valueOf(event.getPayload().get(key));
+    }
+    return fallback;
+  }
+
+  private String buildOtpDisplay(String otpCode) {
+    if (otpCode == null) {
+      return "000000";
+    }
+
+    String digits = otpCode.replaceAll("\\D", "");
+    if (digits.length() == 6) {
+      return digits.substring(0, 3) + "<br/>" + digits.substring(3);
+    }
+    return otpCode;
+  }
+
+  private String buildOtpEmailHtml(String otpCode, String expiryMinutes, String purposeLabel) {
+    String safePurpose = purposeLabel == null || purposeLabel.isBlank() ? "xác thực" : purposeLabel;
+    return "<div style=\"margin:0;padding:0;background:#f3f6fb;\">" +
+        "  <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"background:#f3f6fb;padding:24px 12px;\">" +
+        "    <tr><td align=\"center\">" +
+        "      <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #e5eaf2;overflow:hidden;\">" +
+        "        <tr><td style=\"padding:18px 20px;background:#f8fbff;border-bottom:1px solid #eef3fb;\">" +
+        "          <span style=\"display:inline-block;width:26px;height:26px;line-height:26px;border-radius:13px;background:#111827;color:#38bdf8;text-align:center;font-size:14px;font-weight:700;font-family:Arial,sans-serif;margin-right:8px;\">H</span>" +
+        "          <span style=\"font-family:Arial,sans-serif;font-size:21px;font-weight:700;color:#3b82f6;vertical-align:middle;\">HealthCareNow</span>" +
+        "        </td></tr>" +
+        "        <tr><td style=\"padding:28px 24px 8px 24px;font-family:Arial,sans-serif;\">" +
+        "          <div style=\"font-size:34px;line-height:1.2;color:#1f2937;font-weight:700;margin-bottom:10px;\">Hello there,</div>" +
+        "          <div style=\"font-size:15px;line-height:1.6;color:#6b7280;margin-bottom:18px;\">Your verification code for HealthCareNow <span style=\"color:#1f2937;font-weight:600;\">(" + safePurpose + ")</span> is:</div>" +
+        "        </td></tr>" +
+        "        <tr><td style=\"padding:0 24px;\">" +
+        "          <div style=\"border:1px solid #e8edf5;border-radius:10px;background:#ffffff;text-align:center;padding:24px 12px;\">" +
+        "            <div style=\"font-family:'Courier New',monospace;font-size:52px;line-height:1.1;letter-spacing:8px;color:#3b82f6;font-weight:700;\">" + buildOtpDisplay(otpCode) + "</div>" +
+        "          </div>" +
+        "        </td></tr>" +
+        "        <tr><td style=\"padding:14px 24px 8px 24px;font-family:Arial,sans-serif;\">" +
+        "          <div style=\"font-size:13px;color:#6b7280;\">&#9432; This code will expire in " + expiryMinutes + " minutes.</div>" +
+        "        </td></tr>" +
+        "        <tr><td style=\"padding:8px 24px 18px 24px;font-family:Arial,sans-serif;\">" +
+        "          <div style=\"font-size:12px;line-height:1.6;color:#94a3b8;\">If you didn&apos;t request this code, please ignore this email or contact our <a href=\"#\" style=\"color:#3b82f6;text-decoration:none;font-weight:600;\">support team</a>.</div>" +
+        "        </td></tr>" +
+        "      </table>" +
+        "      <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:560px;margin-top:16px;font-family:Arial,sans-serif;text-align:center;\">" +
+        "        <tr><td style=\"font-size:12px;line-height:1.9;color:#9ca3af;\">" +
+        "          <a href=\"#\" style=\"color:#94a3b8;text-decoration:underline;margin:0 10px;\">Privacy Policy</a>" +
+        "          <a href=\"#\" style=\"color:#94a3b8;text-decoration:underline;margin:0 10px;\">Security Center</a>" +
+        "          <a href=\"#\" style=\"color:#94a3b8;text-decoration:underline;margin:0 10px;\">Contact Support</a>" +
+        "        </td></tr>" +
+        "        <tr><td style=\"font-size:11px;color:#9ca3af;padding-top:6px;\">&copy; 2026 HealthCareNow. All rights reserved.</td></tr>" +
+        "      </table>" +
+        "    </td></tr>" +
+        "  </table>" +
+        "</div>";
+  }
+
   public void processEvent(NotificationEvent event) {
     log.info("Processing notification event: {}", event.getEventType());
 
@@ -71,30 +129,11 @@ public class NotificationHandler {
       if (event.getEventType().contains("OTP") && event.getPayload() != null && event.getPayload().containsKey("otp_code")) {
         UserContactResponse contactInfo = resolver.resolveContactInfo(event);
         if (contactInfo.getEmail() != null && !contactInfo.getEmail().isEmpty()) {
-            String purpose = event.getPayload().containsKey("purpose") ? String.valueOf(event.getPayload().get("purpose")) : "xác thực tài khoản";
-            String otpCode = String.valueOf(event.getPayload().get("otp_code"));
-            String minutes = event.getPayload().containsKey("otp_expiry_minutes") ? String.valueOf(event.getPayload().get("otp_expiry_minutes")) : "5";
-            
-            String htmlContent = "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center;\">" +
-                "<div style=\"margin-bottom: 30px;\">" +
-                "  <div style=\"display: inline-block; width: 60px; height: 60px; background-color: #000000; border-radius: 50%; vertical-align: middle; margin-right: 15px;\">" +
-                "    <div style=\"color: #00f2fe; font-size: 35px; line-height: 60px; font-weight: bold;\">H</div>" +
-                "  </div>" +
-                "  <span style=\"font-size: 24px; font-weight: 700; color: #4facfe; vertical-align: middle;\">HealthCare Now</span>" +
-                "</div>" +
-                "<h1 style=\"font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px;\">Hello there,</h1>" +
-                "<p style=\"font-size: 16px; color: #666; margin-bottom: 30px;\">Your verification code for HealthCare Now is:</p>" +
-                "<div style=\"background-color: #f8fbff; border-radius: 15px; padding: 30px; margin-bottom: 30px; border: 1px solid #eef5ff;\">" +
-                "  <div style=\"font-size: 48px; font-weight: 800; color: #4facfe; letter-spacing: 12px; font-family: monospace;\">" + otpCode + "</div>" +
-                "</div>" +
-                "<div style=\"display: inline-block; padding: 8px 20px; background-color: #f5f5f5; border-radius: 30px; margin-bottom: 40px;\">" +
-                "  <span style=\"font-size: 14px; color: #888;\">🕒 This code will expire in " + minutes + " minutes.</span>" +
-                "</div>" +
-                "<p style=\"font-size: 14px; color: #999; line-height: 1.6; border-top: 1px solid #f0f0f0; padding-top: 30px;\">" +
-                "  If you didn&apos;t request this code, please ignore this email or contact our " +
-                "  <a href=\"#\" style=\"color: #4facfe; text-decoration: none; font-weight: 600;\">support team</a>." +
-                "</p>" +
-                "</div>";
+          String purpose = getPayloadValue(event, "purpose", "xác thực tài khoản");
+          String otpCode = getPayloadValue(event, "otp_code", "000000");
+          String minutes = getPayloadValue(event, "otp_expiry_minutes", "5");
+
+          String htmlContent = buildOtpEmailHtml(otpCode, minutes, purpose);
 
             NotificationLog emailLog = NotificationLog.builder()
                 .userId(event.getUserId())
@@ -134,6 +173,17 @@ public class NotificationHandler {
   private void dispatchNotification(NotificationEvent event, NotificationTemplate template,
       UserContactResponse contactInfo) {
     NotificationLog notificationLog = resolver.resolveContent(event, template, contactInfo);
+
+    if ("EMAIL".equals(template.getType()) && event.getEventType().contains("OTP")) {
+      String otpCode = getPayloadValue(event, "otp_code", "000000");
+      String minutes = getPayloadValue(event, "otp_expiry_minutes", "5");
+      String purpose = getPayloadValue(event, "purpose", "xác thực tài khoản");
+      notificationLog.setContent(buildOtpEmailHtml(otpCode, minutes, purpose));
+      if (notificationLog.getTitle() == null || notificationLog.getTitle().isBlank()) {
+        notificationLog.setTitle("Mã Xác Thực (OTP) HealthCareNow");
+      }
+    }
+
     notificationLog = logRepository.save(notificationLog); // save initial PENDING state
 
     boolean isSuccess = false;

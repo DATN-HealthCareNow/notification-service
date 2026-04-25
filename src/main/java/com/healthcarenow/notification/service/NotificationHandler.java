@@ -75,18 +75,25 @@ public class NotificationHandler {
             String otpCode = String.valueOf(event.getPayload().get("otp_code"));
             String minutes = event.getPayload().containsKey("otp_expiry_minutes") ? String.valueOf(event.getPayload().get("otp_expiry_minutes")) : "5";
             
-            String htmlContent = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;\">" +
-                "<div style=\"text-align: center; margin-bottom: 20px;\">" +
-                "<h2 style=\"color: #10b981; margin: 0;\">HealthCare Now</h2>" +
+            String htmlContent = "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center;\">" +
+                "<div style=\"margin-bottom: 30px;\">" +
+                "  <div style=\"display: inline-block; width: 60px; height: 60px; background-color: #000000; border-radius: 50%; vertical-align: middle; margin-right: 15px;\">" +
+                "    <div style=\"color: #00f2fe; font-size: 35px; line-height: 60px; font-weight: bold;\">H</div>" +
+                "  </div>" +
+                "  <span style=\"font-size: 24px; font-weight: 700; color: #4facfe; vertical-align: middle;\">HealthCare Now</span>" +
                 "</div>" +
-                "<p style=\"font-size: 16px; color: #333;\">Xin chào,</p>" +
-                "<p style=\"font-size: 16px; color: #333;\">Bạn đã yêu cầu một mã OTP để <strong>" + purpose + "</strong>. Vui lòng sử dụng mã bảo mật dưới đây:</p>" +
-                "<div style=\"text-align: center; margin: 30px 0;\">" +
-                "<span style=\"font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #10b981; background-color: #f0fdf4; padding: 15px 30px; border-radius: 8px; border: 1px dashed #34d399;\">" + otpCode + "</span>" +
+                "<h1 style=\"font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px;\">Hello there,</h1>" +
+                "<p style=\"font-size: 16px; color: #666; margin-bottom: 30px;\">Your verification code for HealthCare Now is:</p>" +
+                "<div style=\"background-color: #f8fbff; border-radius: 15px; padding: 30px; margin-bottom: 30px; border: 1px solid #eef5ff;\">" +
+                "  <div style=\"font-size: 48px; font-weight: 800; color: #4facfe; letter-spacing: 12px; font-family: monospace;\">" + otpCode + "</div>" +
                 "</div>" +
-                "<p style=\"font-size: 14px; color: #666;\">Mã OTP này sẽ hết hạn sau " + minutes + " phút. Tuyệt đối <strong>KHÔNG</strong> chia sẻ mã này cho bất kỳ ai để đảm bảo an toàn tài khoản.</p>" +
-                "<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\" />" +
-                "<p style=\"font-size: 12px; color: #999; text-align: center;\">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.<br/>Đội ngũ HealthCare Now</p>" +
+                "<div style=\"display: inline-block; padding: 8px 20px; background-color: #f5f5f5; border-radius: 30px; margin-bottom: 40px;\">" +
+                "  <span style=\"font-size: 14px; color: #888;\">🕒 This code will expire in " + minutes + " minutes.</span>" +
+                "</div>" +
+                "<p style=\"font-size: 14px; color: #999; line-height: 1.6; border-top: 1px solid #f0f0f0; padding-top: 30px;\">" +
+                "  If you didn&apos;t request this code, please ignore this email or contact our " +
+                "  <a href=\"#\" style=\"color: #4facfe; text-decoration: none; font-weight: 600;\">support team</a>." +
+                "</p>" +
                 "</div>";
 
             NotificationLog emailLog = NotificationLog.builder()

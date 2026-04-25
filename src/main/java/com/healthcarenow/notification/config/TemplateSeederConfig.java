@@ -301,10 +301,20 @@ public class TemplateSeederConfig {
           .type("EMAIL")
           .language("vi")
           .title("Ma OTP {purpose} cua ban")
-          .body("<h2>Yeu cau {purpose}</h2>" +
-            "<p>Ma OTP cua ban la: <strong style='font-size: 22px'>{otp_code}</strong></p>" +
-            "<p>Ma co hieu luc trong <strong>{otp_expiry_minutes} phut</strong>.</p>" +
-            "<p>Neu ban khong thuc hien thao tac nay, vui long bo qua email.</p>")
+          .body("<div style=\"font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; text-align: center;\">" +
+            "<div style=\"margin-bottom: 30px;\">" +
+            "  <div style=\"display: inline-block; width: 50px; height: 50px; background-color: #000; border-radius: 50%; vertical-align: middle; margin-right: 10px;\">" +
+            "    <div style=\"color: #00f2fe; font-size: 30px; line-height: 50px; font-weight: bold;\">H</div>" +
+            "  </div>" +
+            "  <span style=\"font-size: 20px; font-weight: 700; color: #4facfe;\">HealthCare Now</span>" +
+            "</div>" +
+            "<h1 style=\"font-size: 24px; color: #1a1a1a;\">Hello there,</h1>" +
+            "<p style=\"color: #666;\">Your verification code for {purpose} is:</p>" +
+            "<div style=\"background-color: #f8fbff; border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #eef5ff;\">" +
+            "  <div style=\"font-size: 40px; font-weight: 800; color: #4facfe; letter-spacing: 10px;\">{otp_code}</div>" +
+            "</div>" +
+            "<p style=\"font-size: 13px; color: #999;\">🕒 This code will expire in {otp_expiry_minutes} minutes.</p>" +
+            "</div>")
           .priority("HIGH")
           .enabled(true)
           .version(1)
@@ -318,11 +328,21 @@ public class TemplateSeederConfig {
           .code("REGISTER_OTP")
           .type("EMAIL")
           .language("vi")
-          .title("Ma OTP xac nhan dang ky tai khoan cua ban")
-          .body("<h2>Xac nhan dang ky tai khoan</h2>" +
-            "<p>Ma OTP cua ban la: <strong style='font-size: 22px'>{otp_code}</strong></p>" +
-            "<p>Ma co hieu luc trong <strong>{otp_expiry_minutes} phut</strong>.</p>" +
-            "<p>Neu ban khong dang ky, vui long bo qua email nay.</p>")
+          .title("Ma OTP xac nhan dang ky tai khoan")
+          .body("<div style=\"font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; background-color: #ffffff; text-align: center;\">" +
+            "<div style=\"margin-bottom: 30px;\">" +
+            "  <div style=\"display: inline-block; width: 50px; height: 50px; background-color: #000; border-radius: 50%; vertical-align: middle; margin-right: 10px;\">" +
+            "    <div style=\"color: #00f2fe; font-size: 30px; line-height: 50px; font-weight: bold;\">H</div>" +
+            "  </div>" +
+            "  <span style=\"font-size: 20px; font-weight: 700; color: #4facfe;\">HealthCare Now</span>" +
+            "</div>" +
+            "<h1 style=\"font-size: 24px; color: #1a1a1a;\">Hello there,</h1>" +
+            "<p style=\"color: #666;\">Your account registration OTP is:</p>" +
+            "<div style=\"background-color: #f8fbff; border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #eef5ff;\">" +
+            "  <div style=\"font-size: 40px; font-weight: 800; color: #4facfe; letter-spacing: 10px;\">{otp_code}</div>" +
+            "</div>" +
+            "<p style=\"font-size: 13px; color: #999;\">🕒 This code will expire in {otp_expiry_minutes} minutes.</p>" +
+            "</div>")
           .priority("HIGH")
           .enabled(true)
           .version(1)

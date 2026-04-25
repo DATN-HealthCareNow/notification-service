@@ -23,8 +23,8 @@ public class NotificationResolver {
   private String internalApiToken;
 
   public UserContactResponse resolveContactInfo(NotificationEvent event) {
-    String email = event.getPayload() != null ? event.getPayload().get("email") : null;
-    String deviceToken = event.getPayload() != null ? event.getPayload().get("device_token") : null;
+    String email = event.getPayload() != null && event.getPayload().get("email") != null ? String.valueOf(event.getPayload().get("email")) : null;
+    String deviceToken = event.getPayload() != null && event.getPayload().get("device_token") != null ? String.valueOf(event.getPayload().get("device_token")) : null;
 
     // If we already have the necessary fallback info from payload, return it
     // immediately to avoid API bottleneck
@@ -52,10 +52,17 @@ public class NotificationResolver {
 
     // Dynamic string replacement with payload values
     if (event.getPayload() != null) {
-      for (Map.Entry<String, String> entry : event.getPayload().entrySet()) {
-        String placeholder = "{" + entry.getKey() + "}";
-        content = content.replace(placeholder, entry.getValue());
-        title = title.replace(placeholder, entry.getValue());
+      for (Map.Entry<String, Object> entry : event.getPayload().entrySet()) {
+        if (entry.getValue() != null) {
+          String placeholder = "{" + entry.getKey() + "}";
+          String replacement = String.valueOf(entry.getValue());
+          if (content != null) {
+            content = content.replace(placeholder, replacement);
+          }
+          if (title != null) {
+            title = title.replace(placeholder, replacement);
+          }
+        }
       }
     }
 
@@ -68,7 +75,7 @@ public class NotificationResolver {
         .type(template.getType())
         .title(title)
         .content(content)
-        .language(event.getPayload() != null ? event.getPayload().get("language") : null)
+        .language(event.getPayload() != null && event.getPayload().get("language") != null ? String.valueOf(event.getPayload().get("language")) : null)
         .status("PENDING")
         .retryCount(0)
         .build();

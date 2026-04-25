@@ -115,7 +115,7 @@ public class WaterReminderScheduler {
         continue;
       }
 
-      Map<String, String> payload = new HashMap<>();
+      Map<String, Object> payload = new HashMap<>();
       payload.put("language", language);
       payload.put("current", String.valueOf(currentMl));
       payload.put("goal", String.valueOf(goalMl));

@@ -106,7 +106,7 @@ public class ExerciseMinutesReminderScheduler {
       int missingMinutes = Math.max(thresholdMinutes - exerciseMinutes, 0);
       String language = preference.getPreferredLanguage() == null ? "vi" : preference.getPreferredLanguage();
 
-      Map<String, String> payload = new HashMap<>();
+      Map<String, Object> payload = new HashMap<>();
       payload.put("language", language);
       payload.put("exercise_minutes", String.valueOf(exerciseMinutes));
       payload.put("target_minutes", String.valueOf(thresholdMinutes));

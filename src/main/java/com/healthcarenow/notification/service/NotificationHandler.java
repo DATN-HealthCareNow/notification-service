@@ -148,8 +148,11 @@ public class NotificationHandler {
     notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : notificationLog.getSentAt());
     logRepository.save(notificationLog);
 
-    // Always publish to websocket so in-app notifications still work even if PUSH to OS fails
-    realtimeNotificationPublisher.publish(notificationLog);
+    // Publish to websocket so in-app notifications still work even if PUSH to OS fails
+    // However, skip this for OTP events as they are temporary and only for Email/Phone verification
+    if (!event.getEventType().contains("OTP")) {
+      realtimeNotificationPublisher.publish(notificationLog);
+    }
 
     if (!isSuccess) {
       if (notificationLog.getProviderResponse() != null && 

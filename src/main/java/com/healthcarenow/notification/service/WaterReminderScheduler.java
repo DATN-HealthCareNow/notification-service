@@ -85,12 +85,12 @@ public class WaterReminderScheduler {
         continue;
       }
 
-      String dispatchKey = preference.getUserId() + ":" + now.toLocalDate() + ":" + dispatchPlan.windowKey();
-      if (!dispatchedKeys.add(dispatchKey)) {
+      if (now.toLocalDateTime().isBefore(dispatchPlan.scheduledAt())) {
         continue;
       }
 
-      if (now.toLocalDateTime().isBefore(dispatchPlan.scheduledAt())) {
+      String dispatchKey = preference.getUserId() + ":" + now.toLocalDate() + ":" + dispatchPlan.windowKey();
+      if (!dispatchedKeys.add(dispatchKey)) {
         continue;
       }
 

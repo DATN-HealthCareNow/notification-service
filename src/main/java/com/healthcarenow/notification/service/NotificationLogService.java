@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,38 +21,57 @@ import java.util.stream.Collectors;
 public class NotificationLogService {
   
   private final NotificationLogRepository notificationLogRepository;
-  
+
   /**
-   * Get all notifications for a user (paginated), excluding WATER_REMINDER
+   * Event IDs that should never appear in the user's in-app notification list.
+   * - WATER_REMINDER: transient nudges handled separately
+   * - Any event whose ID contains "OTP": these are auth emails, not in-app messages
+   */
+  private static final List<String> EXCLUDED_EVENT_IDS = Arrays.asList(
+      "WATER_REMINDER",
+      "FORGOT_PASSWORD_OTP",
+      "REGISTER_OTP",
+      "CHANGE_PASSWORD_OTP",
+      "OTP"
+  );
+
+  /**
+   * Get all in-app notifications for a user (paginated), excluding system/OTP events.
    */
   public Page<NotificationLogDTO> getUserNotifications(String userId, Pageable pageable) {
-    Page<NotificationLog> page = notificationLogRepository.findByUserIdAndEventIdNot(userId, "WATER_REMINDER", pageable);
+    Page<NotificationLog> page = notificationLogRepository
+        .findByUserIdAndEventIdNotIn(userId, EXCLUDED_EVENT_IDS, pageable);
     List<NotificationLogDTO> dtos = page.getContent().stream()
+        .filter(n -> n.getEventId() == null || !n.getEventId().toUpperCase().contains("OTP"))
         .map(this::toDTO)
         .collect(Collectors.toList());
     return new PageImpl<>(dtos, pageable, page.getTotalElements());
   }
   
   /**
-   * Get only unread notifications for a user, excluding WATER_REMINDER
+   * Get only unread in-app notifications for a user, excluding system/OTP events.
    */
   public Page<NotificationLogDTO> getUnreadNotifications(String userId, Pageable pageable) {
-    Page<NotificationLog> page = notificationLogRepository.findByUserIdAndEventIdNotAndIsRead(userId, "WATER_REMINDER", false, pageable);
+    Page<NotificationLog> page = notificationLogRepository
+        .findByUserIdAndEventIdNotInAndIsRead(userId, EXCLUDED_EVENT_IDS, false, pageable);
     List<NotificationLogDTO> dtos = page.getContent().stream()
+        .filter(n -> n.getEventId() == null || !n.getEventId().toUpperCase().contains("OTP"))
         .map(this::toDTO)
         .collect(Collectors.toList());
     return new PageImpl<>(dtos, pageable, page.getTotalElements());
   }
   
   /**
-   * Get count of unread notifications, excluding WATER_REMINDER
+   * Get count of unread in-app notifications, excluding system/OTP events.
    */
   public Long getUnreadCount(String userId) {
-    return notificationLogRepository.countByUserIdAndEventIdNotAndIsRead(userId, "WATER_REMINDER", false);
+    long count = notificationLogRepository
+        .countByUserIdAndEventIdNotInAndIsRead(userId, EXCLUDED_EVENT_IDS, false);
+    return count;
   }
   
   /**
-   * Mark a single notification as read
+   * Mark a single notification as read.
    */
   public NotificationLogDTO markAsRead(String userId, String notificationId) {
     NotificationLog notification = notificationLogRepository.findById(notificationId)
@@ -71,22 +91,29 @@ public class NotificationLogService {
     return toDTO(saved);
   }
   
+  /**
+   * Mark all in-app notifications (excluding OTP/system) as read for a user.
+   * Uses a direct list query instead of paging to avoid Integer.MAX_VALUE issues.
+   */
   public Long markAllAsRead(String userId) {
-    Page<NotificationLog> unreadPage = notificationLogRepository.findByUserIdAndEventIdNotAndIsRead(userId, 
-        "WATER_REMINDER", false,
-        org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE));
-    List<NotificationLog> unreadNotifications = unreadPage.getContent();
+    List<NotificationLog> unreadNotifications = notificationLogRepository
+        .findAllUnreadExcluding(userId, EXCLUDED_EVENT_IDS);
+
+    // Extra safety: also skip any that slipped through with OTP in eventId
+    List<NotificationLog> toMark = unreadNotifications.stream()
+        .filter(n -> n.getEventId() == null || !n.getEventId().toUpperCase().contains("OTP"))
+        .collect(Collectors.toList());
+
     LocalDateTime now = LocalDateTime.now();
-    
-    unreadNotifications.forEach(notif -> {
+    toMark.forEach(notif -> {
       notif.setIsRead(true);
       notif.setReadAt(now);
     });
     
-    notificationLogRepository.saveAll(unreadNotifications);
-    log.info("[NotificationLogService] Marked {} notifications as read for user {}", unreadNotifications.size(), userId);
+    notificationLogRepository.saveAll(toMark);
+    log.info("[NotificationLogService] Marked {} notifications as read for user {}", toMark.size(), userId);
     
-    return (long) unreadNotifications.size();
+    return (long) toMark.size();
   }
   
   /**
@@ -97,6 +124,7 @@ public class NotificationLogService {
         .id(log.getId())
         .userId(log.getUserId())
         .type(log.getType())
+        .eventId(log.getEventId())
         .title(log.getTitle())
         .content(log.getContent())
         .status(log.getStatus())
@@ -108,3 +136,4 @@ public class NotificationLogService {
         .build();
   }
 }
+

@@ -19,6 +19,7 @@ public class NotificationLogDTO {
   private String id;
   private String userId;
   private String type;           // PUSH, EMAIL, IN_APP
+  private String eventId;        // e.g. WATER_REMINDER, MEDICATION_TIME, etc.
   private String title;
   private String content;
   private String status;         // SENT, FAILED, BOUNCED
@@ -28,3 +29,4 @@ public class NotificationLogDTO {
   private LocalDateTime sentAt;
   private LocalDateTime readAt;
 }
+

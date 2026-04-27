@@ -85,6 +85,16 @@ public class NotificationHandler {
         "</div>";
   }
 
+  /**
+   * OTP/auth events (forgot-password, register, change-password) should NEVER
+   * create an in-app notification log. They are transient and only delivered via email.
+   */
+  private boolean isOtpEvent(String eventType) {
+    if (eventType == null) return false;
+    String upper = eventType.toUpperCase();
+    return upper.contains("OTP") || upper.contains("FORGOT_PASSWORD") || upper.contains("CHANGE_PASSWORD_OTP") || upper.contains("REGISTER_OTP");
+  }
+
   public void processEvent(NotificationEvent event) {
     log.info("Processing notification event: {}", event.getEventType());
 
@@ -92,8 +102,16 @@ public class NotificationHandler {
         ? String.valueOf(event.getPayload().get("language"))
         : "vi"; // default
 
+    // ── OTP / Auth events ────────────────────────────────────────────────────
+    // These are transient: email only, NO in-app log saved to the database.
+    if (isOtpEvent(event.getEventType())) {
+      log.info("[NotificationHandler] OTP/auth event {} — sending email only, skipping in-app log.", event.getEventType());
+      sendOtpEmailOnly(event, language);
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Load templates (both EMAIL and PUSH if applicable for the event)
-    // Usually, an event might trigger both or just one. We'll try to find both.
     Optional<NotificationTemplate> pushTemplateOpt = templateRepository
         .findByCodeAndTypeAndLanguage(event.getEventType(), "PUSH", language);
     Optional<NotificationTemplate> emailTemplateOpt = templateRepository
@@ -101,15 +119,15 @@ public class NotificationHandler {
 
     if (pushTemplateOpt.isEmpty() && emailTemplateOpt.isEmpty()) {
       log.warn("No templates found for event {} and language {}. Checking for fallback in payload...", event.getEventType(), language);
-      
-      // Fallback: If payload has title and body, we can still send a PUSH
+
+      // Fallback: If payload has title and body, send a PUSH and persist the log
       if (event.getPayload() != null && event.getPayload().containsKey("title") && event.getPayload().containsKey("body")) {
         log.info("Using fallback title/body from payload for event {}", event.getEventType());
         UserContactResponse contactInfo = resolver.resolveContactInfo(event);
-        
-        String recipient = (contactInfo.getDeviceToken() != null && !contactInfo.getDeviceToken().isEmpty()) 
-                          ? contactInfo.getDeviceToken() 
-                          : "UNKNOWN_DEVICE";
+
+        String recipient = (contactInfo.getDeviceToken() != null && !contactInfo.getDeviceToken().isEmpty())
+            ? contactInfo.getDeviceToken()
+            : "UNKNOWN_DEVICE";
 
         NotificationLog fallbackLog = NotificationLog.builder()
             .userId(event.getUserId())
@@ -123,35 +141,6 @@ public class NotificationHandler {
             .createdAt(LocalDateTime.now())
             .build();
         sendRawNotification(fallbackLog);
-      }
-      
-      // Fallback: HTML Email for OTPs if template is missing
-      if (event.getEventType().contains("OTP") && event.getPayload() != null && event.getPayload().containsKey("otp_code")) {
-        UserContactResponse contactInfo = resolver.resolveContactInfo(event);
-        if (contactInfo.getEmail() != null && !contactInfo.getEmail().isEmpty()) {
-          String purpose = getPayloadValue(event, "purpose", "xác thực tài khoản");
-          String otpCode = getPayloadValue(event, "otp_code", "000000");
-          String minutes = getPayloadValue(event, "otp_expiry_minutes", "5");
-
-          String htmlContent = buildOtpEmailHtml(otpCode, minutes, purpose);
-
-            NotificationLog emailLog = NotificationLog.builder()
-                .userId(event.getUserId())
-                .eventId(event.getEventType())
-                .recipient(contactInfo.getEmail())
-                .title("Mã Xác Thực (OTP) HealthCare Now")
-                .content(htmlContent)
-                .type("EMAIL")
-                .language(language)
-                .status("PENDING")
-                .createdAt(LocalDateTime.now())
-                .build();
-            
-            boolean isSuccess = emailProvider.sendEmail(emailLog);
-            emailLog.setStatus(isSuccess ? "SENT" : "FAILED");
-            emailLog.setSentAt(isSuccess ? LocalDateTime.now() : null);
-            logRepository.save(emailLog);
-        }
       }
       return;
     }
@@ -170,19 +159,69 @@ public class NotificationHandler {
     }
   }
 
-  private void dispatchNotification(NotificationEvent event, NotificationTemplate template,
-      UserContactResponse contactInfo) {
-    NotificationLog notificationLog = resolver.resolveContent(event, template, contactInfo);
+  /**
+   * Send OTP email WITHOUT persisting any NotificationLog to the database.
+   * Tries template first; falls back to inline HTML if no template exists.
+   */
+  private void sendOtpEmailOnly(NotificationEvent event, String language) {
+    UserContactResponse contactInfo = resolver.resolveContactInfo(event);
+    if (contactInfo.getEmail() == null || contactInfo.getEmail().isEmpty()) {
+      log.warn("[NotificationHandler] No email found for OTP event {}, user={}", event.getEventType(), event.getUserId());
+      return;
+    }
 
-    if ("EMAIL".equals(template.getType()) && event.getEventType().contains("OTP")) {
+    // Try to use an EMAIL template if one exists
+    Optional<NotificationTemplate> emailTemplateOpt = templateRepository
+        .findByCodeAndTypeAndLanguage(event.getEventType(), "EMAIL", language);
+
+    NotificationLog emailLog;
+    if (emailTemplateOpt.isPresent()) {
+      emailLog = resolver.resolveContent(event, emailTemplateOpt.get(), contactInfo);
+      // Override content with styled HTML for OTP events
       String otpCode = getPayloadValue(event, "otp_code", "000000");
       String minutes = getPayloadValue(event, "otp_expiry_minutes", "5");
       String purpose = getPayloadValue(event, "purpose", "xác thực tài khoản");
-      notificationLog.setContent(buildOtpEmailHtml(otpCode, minutes, purpose));
-      if (notificationLog.getTitle() == null || notificationLog.getTitle().isBlank()) {
-        notificationLog.setTitle("Mã Xác Thực (OTP) HealthCareNow");
+      emailLog.setContent(buildOtpEmailHtml(otpCode, minutes, purpose));
+      if (emailLog.getTitle() == null || emailLog.getTitle().isBlank()) {
+        emailLog.setTitle("Mã Xác Thực (OTP) HealthCareNow");
       }
+    } else {
+      // Inline fallback
+      String purpose = getPayloadValue(event, "purpose", "xác thực tài khoản");
+      String otpCode = getPayloadValue(event, "otp_code", "000000");
+      String minutes = getPayloadValue(event, "otp_expiry_minutes", "5");
+      emailLog = NotificationLog.builder()
+          .userId(event.getUserId())
+          .eventId(event.getEventType())
+          .recipient(contactInfo.getEmail())
+          .title("Mã Xác Thực (OTP) HealthCareNow")
+          .content(buildOtpEmailHtml(otpCode, minutes, purpose))
+          .type("EMAIL")
+          .language(language)
+          .status("PENDING")
+          .createdAt(LocalDateTime.now())
+          .build();
     }
+
+    // Send email — intentionally NOT calling logRepository.save()
+    boolean isSuccess = emailProvider.sendEmail(emailLog);
+    log.info("[NotificationHandler] OTP email for event={} sent={}", event.getEventType(), isSuccess);
+    if (!isSuccess) {
+      log.error("[NotificationHandler] Failed to send OTP email for user={}, event={}", event.getUserId(), event.getEventType());
+    }
+  }
+
+  private void dispatchNotification(NotificationEvent event, NotificationTemplate template,
+      UserContactResponse contactInfo) {
+    // OTP events are handled by sendOtpEmailOnly() and should never reach here,
+    // but guard defensively just in case.
+    if (isOtpEvent(event.getEventType())) {
+      log.warn("[NotificationHandler] dispatchNotification called for OTP event {} — delegating to sendOtpEmailOnly", event.getEventType());
+      sendOtpEmailOnly(event, template.getLanguage() != null ? template.getLanguage() : "vi");
+      return;
+    }
+
+    NotificationLog notificationLog = resolver.resolveContent(event, template, contactInfo);
 
     notificationLog = logRepository.save(notificationLog); // save initial PENDING state
 
@@ -198,17 +237,14 @@ public class NotificationHandler {
     notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : notificationLog.getSentAt());
     logRepository.save(notificationLog);
 
-    // Publish to websocket so in-app notifications still work even if PUSH to OS fails
-    // However, skip this for OTP events as they are temporary and only for Email/Phone verification
-    if (!event.getEventType().contains("OTP")) {
-      realtimeNotificationPublisher.publish(notificationLog);
-    }
+    // Publish realtime so the mobile app receives the in-app notification via WebSocket
+    realtimeNotificationPublisher.publish(notificationLog);
 
     if (!isSuccess) {
-      if (notificationLog.getProviderResponse() != null && 
-          (notificationLog.getProviderResponse().contains("Invalid Token Format") || 
+      if (notificationLog.getProviderResponse() != null &&
+          (notificationLog.getProviderResponse().contains("Invalid Token Format") ||
            notificationLog.getProviderResponse().contains("DeviceNotRegistered"))) {
-         log.warn("Unrecoverable notification error (e.g. invalid token). Skipping DLX retry.");
+        log.warn("Unrecoverable notification error (e.g. invalid token). Skipping DLX retry.");
       } else {
         throw new RuntimeException("Notification failed to send, triggering retry mechanism via DLX.");
       }

@@ -96,24 +96,10 @@ public class NotificationLogService {
    * Uses a direct list query instead of paging to avoid Integer.MAX_VALUE issues.
    */
   public Long markAllAsRead(String userId) {
-    List<NotificationLog> unreadNotifications = notificationLogRepository
-        .findAllUnreadExcluding(userId, EXCLUDED_EVENT_IDS);
-
-    // Extra safety: also skip any that slipped through with OTP in eventId
-    List<NotificationLog> toMark = unreadNotifications.stream()
-        .filter(n -> n.getEventId() == null || !n.getEventId().toUpperCase().contains("OTP"))
-        .collect(Collectors.toList());
-
     LocalDateTime now = LocalDateTime.now();
-    toMark.forEach(notif -> {
-      notif.setIsRead(true);
-      notif.setReadAt(now);
-    });
-    
-    notificationLogRepository.saveAll(toMark);
-    log.info("[NotificationLogService] Marked {} notifications as read for user {}", toMark.size(), userId);
-    
-    return (long) toMark.size();
+    long updatedCount = notificationLogRepository.markAllAsReadForUser(userId, EXCLUDED_EVENT_IDS, now);
+    log.info("[NotificationLogService] Marked {} notifications as read for user {}", updatedCount, userId);
+    return updatedCount;
   }
   
   /**

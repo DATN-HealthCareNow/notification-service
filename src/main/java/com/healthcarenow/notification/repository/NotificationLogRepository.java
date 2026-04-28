@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Repository
 public interface NotificationLogRepository extends MongoRepository<NotificationLog, String> {
@@ -29,5 +30,9 @@ public interface NotificationLogRepository extends MongoRepository<NotificationL
 	// All unread for bulk mark-as-read (no paging needed)
 	@Query("{ 'userId': ?0, 'isRead': false, 'eventId': { $nin: ?1 } }")
 	List<NotificationLog> findAllUnreadExcluding(String userId, List<String> excludedEventIds);
+
+	@org.springframework.data.mongodb.repository.Update("{ '$set': { 'isRead': true, 'readAt': ?2 } }")
+	@Query("{ 'userId': ?0, 'isRead': false, 'eventId': { $nin: ?1 } }")
+	long markAllAsReadForUser(String userId, List<String> excludedEventIds, LocalDateTime now);
 }
 

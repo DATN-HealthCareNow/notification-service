@@ -43,7 +43,7 @@ public class ExerciseMinutesReminderScheduler {
   @Value("${notification.exercise-minutes-reminder.reminder-hour:7}")
   private int reminderHour;
 
-  @Value("${notification.exercise-minutes-reminder.window-minutes:10}")
+  @Value("${notification.exercise-minutes-reminder.window-minutes:60}")
   private int windowMinutes;
 
   @Value("${notification.exercise-minutes-reminder.threshold-minutes:30}")
@@ -106,8 +106,23 @@ public class ExerciseMinutesReminderScheduler {
       int missingMinutes = Math.max(thresholdMinutes - exerciseMinutes, 0);
       String language = preference.getPreferredLanguage() == null ? "vi" : preference.getPreferredLanguage();
 
+      // Build title & body for fallback (when no DB template exists)
+      String title;
+      String body;
+      if (exerciseMinutes < thresholdMinutes) {
+        title = "Nhắc nhở vận động hôm nay! 🏃";
+        body = String.format("Hôm qua bạn chỉ vận động %d/%d phút. Hãy duy trì ít nhất %d phút mỗi ngày nhé!",
+            exerciseMinutes, thresholdMinutes, thresholdMinutes);
+      } else {
+        title = "Tuyệt vời! Mục tiêu vận động đạt rồi 🎉";
+        body = String.format("Hôm qua bạn đã vận động %d phút — vượt mục tiêu %d phút. Tiếp tục phong độ nhé!",
+            exerciseMinutes, thresholdMinutes);
+      }
+
       Map<String, Object> payload = new HashMap<>();
       payload.put("language", language);
+      payload.put("title", title);
+      payload.put("body", body);
       payload.put("exercise_minutes", String.valueOf(exerciseMinutes));
       payload.put("target_minutes", String.valueOf(thresholdMinutes));
       payload.put("missing_minutes", String.valueOf(missingMinutes));

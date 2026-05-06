@@ -107,10 +107,16 @@ public class WaterReminderScheduler {
       String language = preference.getPreferredLanguage() == null ? "vi" : preference.getPreferredLanguage();
       int currentMl = readInt(waterProgress, "totalTodayMl");
       int goalMl = readInt(waterProgress, "goalMl");
+
+      // Default goal 2000ml nếu user chưa cài đặt mục tiêu
+      if (goalMl <= 0) {
+        goalMl = 2000;
+      }
+
       int neededMl = Math.max(goalMl - currentMl, 0);
 
-      if (goalMl <= 0 || neededMl <= 0) {
-        log.info("[WaterReminderScheduler] Skip user {} because goal already met (current={}, goal={})",
+      if (neededMl <= 0) {
+        log.info("[WaterReminderScheduler] Skip user {} — daily water goal already met ({}/{}ml)",
             preference.getUserId(), currentMl, goalMl);
         continue;
       }
@@ -120,14 +126,16 @@ public class WaterReminderScheduler {
       payload.put("current", String.valueOf(currentMl));
       payload.put("goal", String.valueOf(goalMl));
       payload.put("needed", String.valueOf(neededMl));
-      payload.put("title", "Đã đến giờ uống nước!");
-      payload.put("body", String.format("Bạn cần uống thêm %d ml nước nữa để đạt mục tiêu ngày hôm nay (%d/%d ml).", 
+      // title & body luôn có để NotificationHandler fallback hoạt động
+      payload.put("title", "Đã đến giờ uống nước! 💧");
+      payload.put("body", String.format("Bạn cần uống thêm %d ml nước nữa để đạt mục tiêu ngày hôm nay (%d/%d ml).",
           neededMl, currentMl, goalMl));
       payload.put("reminder_source", "water-reminder-scheduler");
       payload.put("reminder_interval_windows", reminderWindows);
       payload.put("scheduled_window", dispatchPlan.windowKey());
       payload.put("scheduled_time", dispatchPlan.scheduledAt().toString());
       payload.put("scheduled_timezone", now.getZone().getId());
+
 
       NotificationEvent event = NotificationEvent.builder()
           .eventType(EVENT_TYPE)

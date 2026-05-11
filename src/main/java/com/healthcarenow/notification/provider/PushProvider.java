@@ -33,7 +33,7 @@ public class PushProvider {
     String token = notificationLog.getRecipient();
     log.info("Sending Push Notification to {}", token);
 
-    if (!token.startsWith("ExponentPushToken[")) {
+    if (!token.startsWith("ExponentPushToken[") && !token.startsWith("ExpoPushToken[")) {
       log.warn("Invalid Expo Push Token format: {}", token);
       notificationLog.setProviderResponse("Invalid Token Format");
       return false;

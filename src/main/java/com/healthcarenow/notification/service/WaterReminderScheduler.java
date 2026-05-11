@@ -154,6 +154,63 @@ public class WaterReminderScheduler {
     }
   }
 
+  @Scheduled(cron = "0 50 23 * * *", zone = "Asia/Ho_Chi_Minh")
+  public void sendDailyWaterSummary() {
+    if (!enabled) return;
+    List<NotificationPreference> preferences = preferenceRepository.findAll();
+    for (NotificationPreference preference : preferences) {
+      if (preference == null || preference.getUserId() == null || preference.getUserId().isBlank()) continue;
+      if (Boolean.FALSE.equals(preference.getAllNotificationsEnabled())) continue;
+
+      Map<String, Boolean> enabledEventTypes = preference.getEnabledEventTypes();
+      if (enabledEventTypes != null && Boolean.FALSE.equals(enabledEventTypes.get(EVENT_TYPE))) continue;
+
+      Map<String, Object> waterProgress;
+      try {
+        waterProgress = coreServiceClient.getWaterProgress(internalApiToken, preference.getUserId());
+      } catch (Exception ex) {
+        continue;
+      }
+
+      int currentMl = readInt(waterProgress, "totalTodayMl");
+      int goalMl = readInt(waterProgress, "goalMl");
+      if (goalMl <= 0) goalMl = 2000;
+      
+      int neededMl = Math.max(goalMl - currentMl, 0);
+      if (neededMl <= 0) continue; // Passed goal, no need to remind
+
+      String language = preference.getPreferredLanguage() == null ? "vi" : preference.getPreferredLanguage();
+      Map<String, Object> payload = new HashMap<>();
+      payload.put("language", language);
+      payload.put("current", String.valueOf(currentMl));
+      payload.put("goal", String.valueOf(goalMl));
+      payload.put("needed", String.valueOf(neededMl));
+      
+      if ("vi".equalsIgnoreCase(language)) {
+        payload.put("title", "Tổng kết nước uống hôm nay 💧");
+        payload.put("body", String.format("Bạn còn thiếu %d ml nước để đạt mục tiêu %d ml. Hãy uống một ly trước khi đi ngủ nhé!", neededMl, goalMl));
+      } else {
+        payload.put("title", "Daily Water Summary 💧");
+        payload.put("body", String.format("You are %d ml short of your %d ml goal. Have a glass of water before bed!", neededMl, goalMl));
+      }
+
+      payload.put("reminder_source", "water-summary-scheduler");
+
+      NotificationEvent event = NotificationEvent.builder()
+          .eventType("WATER_SUMMARY_REMINDER")
+          .userId(preference.getUserId())
+          .priority("NORMAL")
+          .payload(payload)
+          .build();
+
+      try {
+        notificationHandler.processEvent(event);
+      } catch (Exception ex) {
+        log.error("Failed to dispatch water summary reminder", ex);
+      }
+    }
+  }
+
   private List<WaterWindow> parseConfiguredWindows(String rawWindows) {
     List<WaterWindow> windows = new ArrayList<>();
     if (rawWindows == null || rawWindows.isBlank()) {

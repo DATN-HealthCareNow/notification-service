@@ -255,7 +255,8 @@ public class NotificationHandler {
     notificationLog = logRepository.save(notificationLog);
     boolean isSuccess = false;
     
-    if (notificationLog.getRecipient() != null && notificationLog.getRecipient().startsWith("ExponentPushToken[")) {
+    if (notificationLog.getRecipient() != null && 
+       (notificationLog.getRecipient().startsWith("ExponentPushToken[") || notificationLog.getRecipient().startsWith("ExpoPushToken["))) {
       isSuccess = pushProvider.sendPushNotification(notificationLog);
     } else {
       log.info("No valid push token for {}, skipping Expo send but saved for in-app", notificationLog.getUserId());

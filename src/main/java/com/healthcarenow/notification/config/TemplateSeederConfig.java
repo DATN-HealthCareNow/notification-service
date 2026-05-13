@@ -200,6 +200,36 @@ public class TemplateSeederConfig {
           .build(),
         
         NotificationTemplate.builder()
+          .code("EXERCISE_SCHEDULE_REMINDER")
+          .type("PUSH")
+          .language("vi")
+          .title("⏰ Đến giờ tập luyện rồi!")
+          .body("Đã đến giờ cho lịch tập: {schedule_title}. Hãy bắt đầu ngay để duy trì sức khỏe nhé!")
+          .priority("HIGH")
+          .enabled(true)
+          .version(1)
+          .description("Specific reminder for a scheduled exercise (Vietnamese)")
+          .supportedVariables("[\"schedule_title\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        NotificationTemplate.builder()
+          .code("EXERCISE_SCHEDULE_REMINDER")
+          .type("PUSH")
+          .language("en")
+          .title("⏰ Time to exercise!")
+          .body("It's time for your scheduled: {schedule_title}. Let's get moving!")
+          .priority("HIGH")
+          .enabled(true)
+          .version(1)
+          .description("Specific reminder for a scheduled exercise (English)")
+          .supportedVariables("[\"schedule_title\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+        
+        NotificationTemplate.builder()
           .code("ACTIVITY_REMINDER")
           .type("PUSH")
           .language("en")

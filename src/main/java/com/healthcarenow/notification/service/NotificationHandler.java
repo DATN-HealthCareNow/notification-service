@@ -237,13 +237,14 @@ public class NotificationHandler {
     notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : notificationLog.getSentAt());
     logRepository.save(notificationLog);
 
-    // Publish realtime so the mobile app receives the in-app notification via WebSocket
-    // Skip for transient reminders like water/medication to keep them "External Only"
+    // Skip realtime publishing for all events as per user request to move all to "External Only"
+    /*
     if (!"WATER_REMINDER".equals(notificationLog.getEventId()) && 
         !"MEDICATION_TIME".equals(notificationLog.getEventId()) &&
         !"MEDICATION_REMINDER".equals(notificationLog.getEventId())) {
       realtimeNotificationPublisher.publish(notificationLog);
     }
+    */
 
     if (!isSuccess) {
       if (notificationLog.getProviderResponse() != null &&
@@ -273,10 +274,12 @@ public class NotificationHandler {
     notificationLog.setSentAt(isSuccess ? LocalDateTime.now() : null);
     logRepository.save(notificationLog);
 
+    /*
     if (!"WATER_REMINDER".equals(notificationLog.getEventId()) && 
         !"MEDICATION_TIME".equals(notificationLog.getEventId()) &&
         !"MEDICATION_REMINDER".equals(notificationLog.getEventId())) {
       realtimeNotificationPublisher.publish(notificationLog);
     }
+    */
   }
 }

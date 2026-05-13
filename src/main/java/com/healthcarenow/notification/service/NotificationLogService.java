@@ -41,13 +41,8 @@ public class NotificationLogService {
    * Get all in-app notifications for a user (paginated), excluding system/OTP events.
    */
   public Page<NotificationLogDTO> getUserNotifications(String userId, Pageable pageable) {
-    Page<NotificationLog> page = notificationLogRepository
-        .findByUserIdAndEventIdNotIn(userId, EXCLUDED_EVENT_IDS, pageable);
-    List<NotificationLogDTO> dtos = page.getContent().stream()
-        .filter(n -> n.getEventId() == null || !n.getEventId().toUpperCase().contains("OTP"))
-        .map(this::toDTO)
-        .collect(Collectors.toList());
-    return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    // As per user request to move all notifications to "External Only", we return an empty list for in-app history.
+    return org.springframework.data.domain.Page.empty(pageable);
   }
   
   /**

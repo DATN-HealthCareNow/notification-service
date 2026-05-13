@@ -29,6 +29,8 @@ public class NotificationLogService {
    */
   private static final List<String> EXCLUDED_EVENT_IDS = Arrays.asList(
       "WATER_REMINDER",
+      "MEDICATION_REMINDER",
+      "MEDICATION_TIME",
       "FORGOT_PASSWORD_OTP",
       "REGISTER_OTP",
       "CHANGE_PASSWORD_OTP",

@@ -93,14 +93,14 @@ public class MealReminderScheduler {
 
       Map<String, Object> payload = new HashMap<>();
       payload.put("language", language);
-      payload.put("meal_type", mealType);
+      payload.put("meal_name", "vi".equalsIgnoreCase(language) ? mealNameVi : mealNameEn);
       
       if ("vi".equalsIgnoreCase(language)) {
         payload.put("title", "Đến giờ " + mealNameVi.toLowerCase() + " rồi! 🍽️");
-        payload.put("body", "Đừng quên bổ sung năng lượng cho cơ thể bằng một " + mealNameVi.toLowerCase() + " thật ngon miệng và đầy đủ dinh dưỡng nhé!");
+        payload.put("body", "Đã đến lúc nạp năng lượng cho " + mealNameVi.toLowerCase() + ". Đừng bỏ bữa bạn nhé!");
       } else {
         payload.put("title", "Time for " + mealNameEn.toLowerCase() + "! 🍽️");
-        payload.put("body", "Don't forget to refuel your body with a healthy and delicious " + mealNameEn.toLowerCase() + "!");
+        payload.put("body", "It's time for your " + mealNameEn.toLowerCase() + ". Don't skip your meal!");
       }
       
       payload.put("reminder_source", "meal-reminder-scheduler");

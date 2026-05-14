@@ -307,6 +307,37 @@ public class TemplateSeederConfig {
           .updatedTimeUnix(Instant.now().getEpochSecond())
           .build(),
         
+        // MEAL_REMINDER
+        NotificationTemplate.builder()
+          .code("MEAL_REMINDER")
+          .type("PUSH")
+          .language("vi")
+          .title("🍽️ Đến giờ ăn rồi!")
+          .body("Đã đến lúc nạp năng lượng cho {meal_name}. Đừng bỏ bữa bạn nhé!")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Meal reminder push notification (Vietnamese)")
+          .supportedVariables("[\"meal_name\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+
+        NotificationTemplate.builder()
+          .code("MEAL_REMINDER")
+          .type("PUSH")
+          .language("en")
+          .title("🍽️ Meal Time!")
+          .body("It's time for your {meal_name}. Don't skip your meal!")
+          .priority("NORMAL")
+          .enabled(true)
+          .version(1)
+          .description("Meal reminder push notification (English)")
+          .supportedVariables("[\"meal_name\"]")
+          .createdTimeUnix(Instant.now().getEpochSecond())
+          .updatedTimeUnix(Instant.now().getEpochSecond())
+          .build(),
+        
         // EMAIL templates (fallback channel)
         NotificationTemplate.builder()
           .code("FALL_DETECTED")

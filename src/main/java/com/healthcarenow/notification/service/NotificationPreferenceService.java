@@ -92,6 +92,9 @@ public class NotificationPreferenceService {
     defaultEnabledEventTypes.put("ACTIVITY_REMINDER", true);
     defaultEnabledEventTypes.put("APPOINTMENT_REMINDER", true);
     defaultEnabledEventTypes.put("MEDICATION_TIME", true);
+    defaultEnabledEventTypes.put("MEAL_REMINDER", true);
+    defaultEnabledEventTypes.put("EXERCISE_SCHEDULE_REMINDER", true);
+    defaultEnabledEventTypes.put("NEW_ARTICLE_PUBLISHED", true);
     
     long now = Instant.now().getEpochSecond();
     

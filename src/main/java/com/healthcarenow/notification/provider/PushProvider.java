@@ -98,7 +98,7 @@ public class PushProvider {
     if ("WATER_REMINDER".equals(eventType)) {
       data.put("screen", "hydration");
       data.put("action", "open_water_screen");
-    } else if ("LOW_EXERCISE_REMINDER".equals(eventType) || "ACTIVITY_REMINDER".equals(eventType)) {
+    } else if ("LOW_EXERCISE_REMINDER".equals(eventType) || "ACTIVITY_REMINDER".equals(eventType) || "EXERCISE_SCHEDULE_REMINDER".equals(eventType)) {
       data.put("screen", "activity");
       data.put("action", "open_activity_screen");
     } else if ("MEDICATION_TIME".equals(eventType) || "MEDICATION_REMINDER".equals(eventType)) {
@@ -107,6 +107,9 @@ public class PushProvider {
     } else if ("NEW_ARTICLE_PUBLISHED".equals(eventType)) {
       data.put("screen", "articles");
       data.put("action", "open_article_screen");
+    } else if ("MEAL_REMINDER".equals(eventType)) {
+      data.put("screen", "meal_schedule");
+      data.put("action", "open_meal_screen");
     }
 
     return data;
